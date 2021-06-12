@@ -20,5 +20,9 @@ for i in range(2, row + 1):    # Don't begin from 1 as name of the field also co
         try:
             new_wb = openpyxl.load_workbook(f"{field_types}.xlsx")
         except FileNotFoundError:
-            new_wb = openpyxl.Workbook()    
+            new_wb = openpyxl.Workbook()
+        new_sheet = new_wb.active
+        new_rows = new_sheet.max_row + 1
+        for j in range(1, column + 1):
+            new_sheet.cell(new_rows,j,value = sheet.cell(i,j).value)    
         new_wb.save(f"{field_types}.xlsx")
