@@ -73,7 +73,7 @@ check_code = input("Enter your Mail Verfication Code: ")
 
 if sec_code == check_code:
     pwd = input("Enter Your Password: ")
-    chec_pwd = input("ReType your Password: ")
+    chec_pwd = input("Confirm your Password: ")
     if pwd == chec_pwd:
         password=pwd
         listappening(username, password)
