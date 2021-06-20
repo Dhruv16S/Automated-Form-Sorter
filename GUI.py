@@ -118,6 +118,9 @@ def Form_Sorting():
                         new_wb = openpyxl.load_workbook(f"{field_types}.xlsx")
                     except FileNotFoundError:
                         new_wb = openpyxl.Workbook()
+                        new_sheet_fields = new_wb.active
+                        for k in range(1, fields.max_column + 1):
+                            new_sheet_fields.cell(row = 1, column = k, value = fields.sheet.cell(row = 1, column = k).value)
                     new_sheet = new_wb.active
                     new_rows = new_sheet.max_row + 1
                     for j in range(1, fields.max_column + 1):
@@ -143,7 +146,9 @@ def Form_Sorting():
                             new_wb = openpyxl.load_workbook(f"{excel_file}.xlsx")
                         except FileNotFoundError:
                             new_wb = openpyxl.Workbook()
-
+                            new_sheet_fields = new_wb.active
+                            for k in range(1, fields.max_column + 1):
+                                new_sheet_fields.cell(row = 1, column = k, value = fields.sheet.cell(row = 1, column = k).value)
                         new_sheet = new_wb.active
                         new_rows = new_sheet.max_row + 1                          
                         for j in range(1, fields.max_column + 1):
