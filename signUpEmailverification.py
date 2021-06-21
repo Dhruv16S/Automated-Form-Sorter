@@ -31,7 +31,7 @@ def password_generator():
     upper=string.ascii_uppercase
     num=string.digits
 
-    all=lower+upper+num   #+symbols
+    all=lower+upper+num   #+ symbols
     temp=random.sample(all,5)
     password="".join(temp)
     return(password)

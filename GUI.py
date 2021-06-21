@@ -7,6 +7,9 @@ from selenium import webdriver
 import json
 import re 
 import smtplib
+import random
+import string
+from email.message import EmailMessage
 regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
 h = 500; w = 700
 window = tkinter.Tk()
@@ -17,7 +20,6 @@ y = (hs/2) - (h/2)
 window.title("Unified Form Manager")
 window.minsize(height = h, width = w)
 window.geometry('%dx%d+%d+%d' % (w, h, x, y))
-PASS = "ferrarisf21"
 
 def Remove():
     widgets = window.winfo_children()
@@ -256,8 +258,6 @@ def Send_Mails():
     homebutton = tkinter.Button(text = "Go to home", command = on_home.MainMenu).pack(side = TOP, anchor = NE)
     loggedin = tkinter.Label(text = f"Logged in as {on_home.username}").pack(side = BOTTOM, anchor = SE)
 
-
-
 class Home:
     def HomePage(self):
         on_home.homebutton.destroy()
@@ -294,15 +294,18 @@ class Home:
 
 
     def CreatingAccount(self):
-        f=open("logindetails.json","r+")
-        contents = f.read()
-        js = json.loads(contents)
-        js.append({'username': self.username, 'password': self.password})
-        f.seek(0)       
-        f.write(json.dumps(js, indent=2))
-        f.truncate()
-        f.close()
-        self.MainMenu()
+        if self.passwordwidget.get(1.0,END) != self.confirm_passwordwidget.get(1.0, END):
+            self.different_passwords = tkinter.Label(text = "Please enter the password entered earlier : ", fg = "red").place(x = 310, y = 400)
+        else:
+            f=open("logindetails.json","r+")
+            contents = f.read()
+            js = json.loads(contents)
+            js.append({'username': self.username, 'password': self.passwordwidget.get(1.0, END).strip()})
+            f.seek(0)       
+            f.write(json.dumps(js, indent=2))
+            f.truncate()
+            f.close()
+            self.MainMenu()
     
     def CheckingForAccount(self):
         f = open("logindetails.json","r+")
@@ -328,10 +331,44 @@ class Home:
 
         # Need to create a button for Forgot Password
 
+    def Password_Confirmation(self):
+        if self.password != self.verificationwidget.get(1.0, END).strip():
+            self.verificationwidget.config(font = ("red"))
+            self.incorrectid = tkinter.Label(text = "Incorrect Authentication id", font = ("TimesNewRoman"), fg = "red").place(x = 310, y = 360)
+        else:
+            self.userdetails_img = Image.open("Images/Signup Page 2.png")
+            self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
+            self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
+            self.user.place(x = 262, y = 100)
+            self.passwordwidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
+            self.passwordwidget.place(x = 310, y  = 200)
+            self.confirm_passwordwidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
+            self.confirm_passwordwidget.place(x = 310, y  = 310)           
+            self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = on_home.CreatingAccount)
+            self.next.place(x = 580, y = 340)
+
     def Submit_NewUser(self):
+        self.homebutton.destroy()
+        app.destroy(); login_button.destroy()
         self.username = self.usernamewidget.get(1.0, END).strip()
-        self.password = self.passwordwidget.get(1.0, END).strip()
-        self.CreatingAccount()
+        self.lower=string.ascii_lowercase
+        self.upper=string.ascii_uppercase
+        self.num=string.digits
+        all = self.lower + self.upper + self.num   #+ symbols
+        temp=random.sample(all,5)
+        self.password="".join(temp)
+        self.userdetails_img = Image.open("Images/Signup Page 3.png")
+        self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
+        self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
+        self.user.place(x = 262, y = 100)
+        self.verificationwidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
+        self.verificationwidget.place(x = 310, y  = 270)
+        self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = on_home.Password_Confirmation)
+        self.next.place(x = 580, y = 330)
+        with smtplib.SMTP("smtp.gmail.com") as server:
+            server.starttls()
+            server.login('testproject194@gmail.com', 'testproject!@#$')
+            server.sendmail(from_addr = 'testproject194@gmail.com', to_addrs = self.username, msg = f"Subject : Authentication Code\n\nAuthentication Code is {self.password}")
 
     def Submit_Login(self):
         self.username = self.usernamewidget.get(1.0, END).strip()
@@ -341,18 +378,17 @@ class Home:
     def Clicked_Signin(self):
         self.homebutton.destroy()
         app.destroy(); login_button.destroy()
-        self.userdetails_img = Image.open("Images/UserDetails.png")
+        self.userdetails_img = Image.open("Images/Signup Page 1.png")
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 262, y = 100)
         self.usernamewidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
         self.usernamewidget.place(x = 310, y  = 200)
-        self.passwordwidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
-        self.passwordwidget.place(x = 310, y  = 310)
         self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = self.Submit_NewUser)
-        self.next.place(x = 590, y = 340)
+        self.next.place(x = 580, y = 330)
         self.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
         self.homebutton.pack(side = TOP, anchor = NE)
+
     def Clicked_Login(self):
         self.homebutton.destroy()
         app.destroy(); signin_button.destroy()
@@ -368,6 +404,7 @@ class Home:
         self.next.place(x = 390, y = 340)
         self.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
         self.homebutton.pack(side = TOP, anchor = NE)
+
 on_home = Home()
 
 signin_img = Image.open("Images/Signin.png")
@@ -387,12 +424,4 @@ login_button.place(x = 462, y = 100)
 
 on_home.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
 
-# def track(event):
-#     print(event.x, event.y)
-# window.bind("<Motion>",track)
-
-
 window.mainloop()
-
-
-
