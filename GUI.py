@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 from selenium import webdriver
 import json
 import re 
+import smtplib
 regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
 h = 500; w = 700
 window = tkinter.Tk()
@@ -16,6 +17,7 @@ y = (hs/2) - (h/2)
 window.title("Unified Form Manager")
 window.minsize(height = h, width = w)
 window.geometry('%dx%d+%d+%d' % (w, h, x, y))
+PASS = "ferrarisf21"
 
 def Remove():
     widgets = window.winfo_children()
@@ -196,6 +198,28 @@ def Send_Mails():
         setattr(mails, "fields_available", field_list)
         for name in mails.fields_available:
             displaying_fields.insert(END, u'\u2022 {}\n'.format(name))
+    
+    def Write_Mails():
+        wb = openpyxl.load_workbook(mails.file_path)
+        sheet = wb.active
+        email_message = mail_body.get(1.0, END)
+        addresses = to_address.get(1.0, END)
+        mailbody_check = {}
+        for i in range(1, sheet.max_column + 1):
+            if email_message.find(f"<<{sheet.cell(1, i).value}>>") != -1:
+                mailbody_check[f"<<{sheet.cell(1, i).value}>>"] = i
+        for i in range(1, sheet.max_column + 1):
+            if addresses.find(f"<<{sheet.cell(1, i).value}>>") != -1:
+                mailbody_check["emailid"] = i 
+        with smtplib.SMTP("smtp.gmail.com") as connection:
+            connection.starttls()
+            connection.login(user = from_address.get(1.0, END).strip(), password = gmail_password.get(1.0, END).strip())
+            for i in range(2, sheet.max_row + 1):
+                unique_messages = email_message
+                for field_name, column_number in mailbody_check.items():
+                    unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
+                connection.sendmail(from_addr = from_address.get(1.0, END).strip(), to_addrs = sheet.cell(row = i, column = mailbody_check["emailid"]).value, msg = f"Subject:{subject.get(1.0,END).strip()}\n\n{unique_messages}")
+
 
     mails = TkinterReturns_Mail()
     scroll = tkinter.Scrollbar()
@@ -211,17 +235,27 @@ def Send_Mails():
     scroll.config(command=displaying_fields.yview)
     subject_label = tkinter.Label(text = "Subject : ").place(x = 50, y = 245)
     subject = tkinter.Text(height = 1, width = 80, font = ("Times New Roman", 8 , "bold"), borderwidth = 0)
-    subject.place(x = 140, y = 250)
+    subject.place(x = 130, y = 250)
     fromaddress_label = tkinter.Label(text = "From : ").place(x = 300, y = 160)
-    subject = tkinter.Text(height = 1, width = 30, font = ("Times New Roman", 8), borderwidth = 0)
-    subject.place(x = 350, y = 163)
+    from_address = tkinter.Text(height = 1, width = 28, font = ("Times New Roman", 8), borderwidth = 0)
+    from_address.insert(END, f"{on_home.username}")
+    from_address.place(x = 350, y = 163)
+    gmail_password_label = tkinter.Label(text = "Enter your Gmail Password : ")
+    gmail_password_label.place(x = 545 ,y = 137)
+    gmail_password = tkinter.Text(height = 1, width = 13, borderwidth = 0)
+    gmail_password.place(x = 550 ,y = 160 )
     toaddress_label = tkinter.Label(text = "To : ").place(x = 300, y = 190)
-    subject = tkinter.Text(height = 1, width = 30, font = ("Times New Roman", 8), borderwidth = 0)
-    subject.place(x = 350, y = 193)
+    to_address = tkinter.Text(height = 1, width = 30, font = ("Times New Roman", 8), borderwidth = 0)
+    to_address.place(x = 350, y = 193)
+    enter_body = tkinter.Label(text = "Enter the body of the email : ")
+    enter_body.place(x = 50, y = 275)
+    mail_body = tkinter.Text(height = 10, width = 70, borderwidth = 0)
+    mail_body.place(x = 50, y = 295)
+    mail_preview = tkinter.Button(text = "Send Mails", borderwidth = 0, command = Write_Mails)   #or mail preview
+    mail_preview.place(x = 50, y = 468)
     homebutton = tkinter.Button(text = "Go to home", command = on_home.MainMenu).pack(side = TOP, anchor = NE)
     loggedin = tkinter.Label(text = f"Logged in as {on_home.username}").pack(side = BOTTOM, anchor = SE)
-    # help_to = Balloon(window)
-    # help_to.bind_widget(toaddress_label, balloonmsg = f"Enter the field of the Excel file from where you wish to extract the email ids.")
+
 
 
 class Home:
