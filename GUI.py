@@ -1,3 +1,4 @@
+from os import name
 import tkinter
 from tkinter.constants import BOTTOM, END, LEFT, NE, RIGHT, SE, TOP, Y
 import openpyxl
@@ -10,6 +11,7 @@ import smtplib
 import random
 import string
 from email.message import EmailMessage
+import time
 regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
 h = 500; w = 700
 window = tkinter.Tk()
@@ -47,8 +49,8 @@ def Form_Sorting():
                     self.submit_choices.destroy()
                     
             elif self.radio_state.get() == 2:
-                self.custom_choice = tkinter.Text(width = 30, height = 1)
-                self.custom_choice.place(x = 168, y = 345)
+                self.custom_choice = tkinter.Text(width = 30, height = 1, font = ("Consolas",12,"bold"), borderwidth = 0)
+                self.custom_choice.place(x = 195, y = 345)
                 self.custom_choice.focus()
                 self.submit_choices = tkinter.Button(text = "Submit", command = fields.Fields_Received)
                 self.submit_choices.place(x = 420,y = 342)
@@ -60,9 +62,9 @@ def Form_Sorting():
             self.radio_state = tkinter.IntVar()
             self.radiobutton1 = tkinter.Radiobutton(text = "Create a New Excel File for every distinct value encountered ", value = 1, variable = self.radio_state, command = fields.Option_Selected)
             self.radiobutton2 = tkinter.Radiobutton(text = "Create an Excel File for fields that contain : ", value = 2, variable = self.radio_state, command = fields.Option_Selected)
-            self.radiobutton1.place(x = 168, y = 293)
-            self.radiobutton2.place(x = 168, y = 315)
-            self.custom_choice = tkinter.Text(width = 10, height = 1)          
+            self.radiobutton1.place(x = 195, y = 293)
+            self.radiobutton2.place(x = 195, y = 315)
+            self.custom_choice = tkinter.Text(width = 10, height = 1,font = ("Consolas",14,"bold"), borderwidth = 0)          
 
         def Open_Drive(self):
             chrome_driver_path = "C:/Chrome Driver/chromedriver"
@@ -90,7 +92,7 @@ def Form_Sorting():
                 self.Sheet_Parameters[self.sheet.cell(row = 1, column = i).value] = i
 
             label = tkinter.Label(text = "The following fields have been identified.\nHow would you like to classify the form : ").place(x = 40, y = 242)
-            self.Fields_available = tkinter.Listbox(height = len(self.Sheet_Parameters), borderwidth=0)
+            self.Fields_available = tkinter.Listbox(height = len(self.Sheet_Parameters), borderwidth=0, font = ("Consolas",10,"bold"))
             for key, value in self.Sheet_Parameters.items():
                 self.Fields_available.insert(value, key)
                 self.Fields_available.bind("<<ListboxSelect>>",fields.Field_Selected)
@@ -106,9 +108,9 @@ def Form_Sorting():
     fields.download_Button = tkinter.Button(image = fields.drive_img, command = fields.Open_Drive,borderwidth = 0)
     fields.download_Button.place(x = 350, y = 40)
     drivelabel = tkinter.Label(text = "Download From Drive").place(x = 360, y = 175)
-    openfile_label = tkinter.Label(text = "File Opened : ").place(x = 175, y = 202)
-    file_name = tkinter.Text(height = 1, width = 70, font = ("Times New Roman", 8), borderwidth = 0)
-    file_name.place(x = 260, y = 205)
+    openfile_label = tkinter.Label(text = "File Opened : ").place(x = 125, y = 202)
+    file_name = tkinter.Text(height = 1, width = 80, font = ("Consolas",8,"bold"), borderwidth = 0)
+    file_name.place(x = 210, y = 205)
     
     homebutton = tkinter.Button(text = "Go to home", command = on_home.MainMenu).pack(side = TOP, anchor = NE)
     loggedin = tkinter.Label(text = f"Logged in as {on_home.username}").pack(side = BOTTOM, anchor = SE)
@@ -162,29 +164,19 @@ def Form_Sorting():
                                 new_sheet.cell(new_rows,j,value = fields.sheet.cell(i,j).value)    
                             new_wb.save(f"{excel_file}.xlsx")
 
-            # for choice_name in users_criteria:
-            #     for i in range(2, fields.row + 1):
-            #         choices_opted = str(fields.sheet.cell(i, operating_column).value).split(",")      
-            #         file_name = [choice.strip() for choice in choices_opted]
-            #         if choice_name in file_name:
-            #             try:
-            #                 new_wb = openpyxl.load_workbook(f"{choice_name}.xlsx")
-            #             except FileNotFoundError:
-            #                 new_wb = openpyxl.Workbook()
-            #             new_sheet = new_wb.active
-            #             new_rows = new_sheet.max_row + 1                          
-            #             for j in range(1, fields.column + 1):
-            #                 if j == operating_column:
-            #                     new_sheet.cell(new_rows,j,value = choice_name)
-            #                 else:
-            #                     new_sheet.cell(new_rows,j,value = fields.sheet.cell(i,j).value)    
-            #                 new_wb.save(f"{choice_name}.xlsx")
+
     
 def Send_Mails():
     Remove()
     class TkinterReturns_Mail:
         def __init__(self):
             self.file_path = "../"
+
+    def DisplayGmailPassword():
+        if state_check.get() == 1:
+            gmail_password.config(show = "")
+        else:
+            gmail_password.config(show = "*")
 
     def Browse_File():
         if file_name.get(1.0,END) != "":
@@ -215,7 +207,7 @@ def Send_Mails():
                 mailbody_check["emailid"] = i 
         with smtplib.SMTP("smtp.gmail.com") as connection:
             connection.starttls()
-            connection.login(user = from_address.get(1.0, END).strip(), password = gmail_password.get(1.0, END).strip())
+            connection.login(user = from_address.get(1.0, END).strip(), password = gmail_password.get().strip())
             for i in range(2, sheet.max_row + 1):
                 unique_messages = email_message
                 for field_name, column_number in mailbody_check.items():
@@ -228,30 +220,33 @@ def Send_Mails():
     scroll.place(x = 260, y = 150) 
     browsed_file = tkinter.Button(text = "Browse Files : ", borderwidth = 0, command = Browse_File)
     browsed_file.place(x = 50, y = 100)
-    file_name = tkinter.Text(height = 1, width = 80, font = ("Times New Roman", 8), borderwidth = 0)
+    file_name = tkinter.Text(height = 1, width = 76, font = ("Consolas",10,"bold"), borderwidth = 0)
     file_name.place(x = 140, y = 100)
     text_label = tkinter.Label(text = "The following fields were identified from The Excel Sheet : ").place(x = 50, y = 120)
-    displaying_fields = tkinter.Text(height = 5, width = 35, borderwidth = 0, font = ("Times New Roman", 10))
+    displaying_fields = tkinter.Text(height = 5, width = 35, font = ("Consolas",10,"bold"), borderwidth = 0)
     displaying_fields.place(x = 50, y = 150)
     displaying_fields.config(yscrollcommand=scroll.set)
     scroll.config(command=displaying_fields.yview)
     subject_label = tkinter.Label(text = "Subject : ").place(x = 50, y = 245)
-    subject = tkinter.Text(height = 1, width = 80, font = ("Times New Roman", 8 , "bold"), borderwidth = 0)
-    subject.place(x = 130, y = 250)
+    subject = tkinter.Text(height = 1, width = 60, font = ("Consolas",12,"bold"), borderwidth = 0)
+    subject.place(x = 115, y = 244)
     fromaddress_label = tkinter.Label(text = "From : ").place(x = 300, y = 160)
-    from_address = tkinter.Text(height = 1, width = 28, font = ("Times New Roman", 8), borderwidth = 0)
+    from_address = tkinter.Text(height = 1, width = 28, font = ("Consolas",10,"bold"), borderwidth = 0)
     from_address.insert(END, f"{on_home.username}")
-    from_address.place(x = 350, y = 163)
+    from_address.place(x = 350, y = 160)
     gmail_password_label = tkinter.Label(text = "Enter your Gmail Password : ")
-    gmail_password_label.place(x = 545 ,y = 137)
-    gmail_password = tkinter.Text(height = 1, width = 13, borderwidth = 0)
-    gmail_password.place(x = 550 ,y = 160 )
-    toaddress_label = tkinter.Label(text = "To : ").place(x = 300, y = 190)
-    to_address = tkinter.Text(height = 1, width = 30, font = ("Times New Roman", 8), borderwidth = 0)
-    to_address.place(x = 350, y = 193)
+    gmail_password_label.place(x = 300 ,y = 180)
+    gmail_password = tkinter.Entry(width = 20, font = ("Consolas",8,"bold"), borderwidth = 0, show = "*")
+    gmail_password.place(x = 470 ,y = 185)
+    state_check = tkinter.IntVar()
+    show_password = tkinter.Checkbutton(variable = state_check, text = "Show Password", command = DisplayGmailPassword)
+    show_password.place(x = 580, y = 180)
+    toaddress_label = tkinter.Label(text = "To : ").place(x = 300, y = 206)
+    to_address = tkinter.Text(height = 1, width = 30, font = ("Consolas",10,"bold"), borderwidth = 0)
+    to_address.place(x = 350, y = 210)
     enter_body = tkinter.Label(text = "Enter the body of the email : ")
     enter_body.place(x = 50, y = 275)
-    mail_body = tkinter.Text(height = 10, width = 70, borderwidth = 0)
+    mail_body = tkinter.Text(height = 7, width = 75, font = ("Consolas",11,"bold"), borderwidth = 0)
     mail_body.place(x = 50, y = 295)
     mail_preview = tkinter.Button(text = "Send Mails", borderwidth = 0, command = Write_Mails)   #or mail preview
     mail_preview.place(x = 50, y = 468)
@@ -259,6 +254,14 @@ def Send_Mails():
     loggedin = tkinter.Label(text = f"Logged in as {on_home.username}").pack(side = BOTTOM, anchor = SE)
 
 class Home:
+
+    def DisplayPassword(self):
+        if self.state_check.get() == 1:
+            self.passwordwidget.config(show = "")
+        else:
+            self.passwordwidget.config(show = "*")
+
+
     def HomePage(self):
         on_home.homebutton.destroy()
         self.signin_img = Image.open("Images/Signin.png")
@@ -280,6 +283,7 @@ class Home:
     def MainMenu(self):
         Remove()
         on_home.homebutton.destroy()
+        # self.incorrectpassword.destroy()
         self.sort_buttonimg = Image.open("Images/Excel_Icon.png").resize((125, 125))
         self.sort_buttonimg = ImageTk.PhotoImage(self.sort_buttonimg)
         self.sort_button = tkinter.Button(image = self.sort_buttonimg, borderwidth = 0, command = Form_Sorting).place(x = 90, y = 100)
@@ -294,13 +298,13 @@ class Home:
 
 
     def CreatingAccount(self):
-        if self.passwordwidget.get(1.0,END) != self.confirm_passwordwidget.get(1.0, END):
+        if self.passwordwidget.get() != self.confirm_passwordwidget.get():
             self.different_passwords = tkinter.Label(text = "Please enter the password entered earlier : ", fg = "red").place(x = 310, y = 400)
         else:
             f=open("logindetails.json","r+")
             contents = f.read()
             js = json.loads(contents)
-            js.append({'username': self.username, 'password': self.passwordwidget.get(1.0, END).strip()})
+            js.append({'username': self.username, 'password': self.passwordwidget.get().strip()})
             f.seek(0)       
             f.write(json.dumps(js, indent=2))
             f.truncate()
@@ -319,8 +323,8 @@ class Home:
                     self.email = True
                     self.MainMenu()
                 else:
-                    self.incorrectpassword = tkinter.Label(text = "Incorrect Password", borderwidth = 0, bg = "white", fg = "red").place(x = 110, y = 337)
-                    self.passwordwidget.config(fg = "red")
+                    self.incorrectpassword = tkinter.Label(text = "Incorrect Password", borderwidth = 0, bg = "white", fg = "red")
+                    self.incorrectpassword.place(x = 340, y = 298)
                     break
             else:
                 self.email = False  
@@ -332,6 +336,8 @@ class Home:
         # Need to create a button for Forgot Password
 
     def Password_Confirmation(self):
+        # self.wait = tkinter.Label(text = "Please wait, you'll be redirected shortly").place(x = 262, y = 200)
+        # time.sleep(5)
         if self.password != self.verificationwidget.get(1.0, END).strip():
             self.verificationwidget.config(font = ("red"))
             self.incorrectid = tkinter.Label(text = "Incorrect Authentication id", font = ("TimesNewRoman"), fg = "red").place(x = 310, y = 360)
@@ -340,10 +346,13 @@ class Home:
             self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
             self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
             self.user.place(x = 262, y = 100)
-            self.passwordwidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
+            self.passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*")
             self.passwordwidget.place(x = 310, y  = 200)
-            self.confirm_passwordwidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
-            self.confirm_passwordwidget.place(x = 310, y  = 310)           
+            self.state_check = tkinter.IntVar()
+            self.show_password = tkinter.Checkbutton(variable = self.state_check, text = "Show Password :", command = self.DisplayPassword)
+            self.show_password.place(x = 310, y = 230)
+            self.confirm_passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*")
+            self.confirm_passwordwidget.place(x = 310, y  = 330)           
             self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = on_home.CreatingAccount)
             self.next.place(x = 580, y = 340)
 
@@ -361,7 +370,7 @@ class Home:
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 262, y = 100)
-        self.verificationwidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
+        self.verificationwidget = tkinter.Text(height = 1, width = 25, font = ("Consolas",14,"bold"), borderwidth = 0)
         self.verificationwidget.place(x = 310, y  = 270)
         self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = on_home.Password_Confirmation)
         self.next.place(x = 580, y = 330)
@@ -372,7 +381,7 @@ class Home:
 
     def Submit_Login(self):
         self.username = self.usernamewidget.get(1.0, END).strip()
-        self.password = self.passwordwidget.get(1.0, END).strip()
+        self.password = self.passwordwidget.get().strip()
         self.CheckingForAccount()
     
     def Clicked_Signin(self):
@@ -382,12 +391,13 @@ class Home:
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 262, y = 100)
-        self.usernamewidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
+        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0)
         self.usernamewidget.place(x = 310, y  = 200)
         self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = self.Submit_NewUser)
         self.next.place(x = 580, y = 330)
         self.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
         self.homebutton.pack(side = TOP, anchor = NE)
+
 
     def Clicked_Login(self):
         self.homebutton.destroy()
@@ -396,10 +406,13 @@ class Home:
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 60, y = 100)
-        self.usernamewidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
+        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0)
         self.usernamewidget.place(x = 110, y  = 200)
-        self.passwordwidget = tkinter.Text(height = 1, width = 25, font = ("TimesNewRoman"))
+        self.passwordwidget = tkinter.Entry(width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*")
         self.passwordwidget.place(x = 110, y  = 310)
+        self.state_check = tkinter.IntVar()
+        self.show_password = tkinter.Checkbutton(variable = self.state_check, text = "Show Password :", command = self.DisplayPassword)
+        self.show_password.place(x = 110, y = 340)
         self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = self.Submit_Login)
         self.next.place(x = 390, y = 340)
         self.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
@@ -425,3 +438,6 @@ login_button.place(x = 462, y = 100)
 on_home.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
 
 window.mainloop()
+
+# font = ("Consolas",14,"bold"), borderwidth = 0
+# dscuderiaferrari@gmail.com

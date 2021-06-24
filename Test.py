@@ -1,14 +1,21 @@
-import openpyxl
-a = "Hello, <<Name>>. Thank you for choosing the following options - <<Choices>>"
-wb = openpyxl.load_workbook("Sample.xlsx")
-mailbody_check = {}
-sheet = wb.active
-for i in range(1, sheet.max_column + 1):
-    if a.find(f"<<{sheet.cell(1, i).value}>>") != -1:
-        mailbody_check[f"<<{sheet.cell(1, i).value}>>"] = i
-s = ""
-for i in range(2, sheet.max_row + 1):
-    a = "Hello, <<Name>>. Thank you for choosing the following options - <<Choices>>"
-    for field_name, column_number in mailbody_check.items():
-        a = a.replace(field_name, sheet.cell(row = i, column = column_number).value)
-    print(a)
+
+
+#Python 3.4 (For 2.7 change tkinter to Tkinter)
+    
+from tkinter import * 
+        
+def show():
+    p = password.get() #get password from entry
+    print(p)
+    passEntry.config(show = "")
+        
+    
+app = Tk()   
+password = StringVar() #Password variable
+passEntry = Entry(app, textvariable=password, show='*')
+submit = Button(app, text='Show Console',command=show)
+
+passEntry.pack() 
+submit.pack()      
+
+app.mainloop() 
