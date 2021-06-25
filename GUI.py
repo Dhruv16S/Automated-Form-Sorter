@@ -47,23 +47,36 @@ def Form_Sorting():
                 if self.custom_choice.winfo_ismapped():
                     self.custom_choice.destroy()
                     self.submit_choices.destroy()
-                    
             elif self.radio_state.get() == 2:
                 self.custom_choice = tkinter.Text(width = 30, height = 1, font = ("Consolas",12,"bold"), borderwidth = 0)
-                self.custom_choice.place(x = 195, y = 345)
+                self.custom_choice.place(in_ = self.Fields_available, relx = 1.0, x = 5, y = 140)
                 self.custom_choice.focus()
                 self.submit_choices = tkinter.Button(text = "Submit", command = fields.Fields_Received)
-                self.submit_choices.place(x = 420,y = 342)
-                
-            
-            
+                self.submit_choices.place(in_ = self.Fields_available, relx = 1.0, x = 286, y = 139)
+
         def Field_Selected(self,event):
+            self.choices_available = [ ]
             self.column = self.Sheet_Parameters[self.Fields_available.get(self.Fields_available.curselection())]
+            for row in range(2, self.sheet.max_row + 1):
+                cell_choices = str(self.sheet.cell(row, self.column).value).split(",")
+                cell_choices = [option.strip() for option in cell_choices]
+                for option in cell_choices:
+                    if option not in self.choices_available:
+                        self.choices_available.append(option)
+            self.choices_available.remove("None")
+            self.scrollbar = tkinter.Scrollbar(window)
+            self.choices_available_textbox = tkinter.Text(height = 5, width = 50, font = ("Consolas",10,"bold"), borderwidth = 0, yscrollcommand = self.scrollbar.set)
+            self.scrollbar.place(in_ = self.choices_available_textbox, relx = 1.0)
+            # self.scrollbar = tkinter.Scrollbar(self.choices_available_textbox)
+            self.scrollbar.config(command = self.choices_available_textbox.yview)
+            for options in self.choices_available : 
+                self.choices_available_textbox.insert(END, u'\u2022 {}\n'.format(options))
+            self.choices_available_textbox.place(in_ = self.Fields_available, relx = 1.0, rely = 0)
             self.radio_state = tkinter.IntVar()
             self.radiobutton1 = tkinter.Radiobutton(text = "Create a New Excel File for every distinct value encountered ", value = 1, variable = self.radio_state, command = fields.Option_Selected)
             self.radiobutton2 = tkinter.Radiobutton(text = "Create an Excel File for fields that contain : ", value = 2, variable = self.radio_state, command = fields.Option_Selected)
-            self.radiobutton1.place(x = 195, y = 293)
-            self.radiobutton2.place(x = 195, y = 315)
+            self.radiobutton1.place(in_ = self.Fields_available, relx = 1.0, x = 5, y = 80)
+            self.radiobutton2.place(in_ = self.Fields_available, relx = 1.0, x = 5, y = 110)
             self.custom_choice = tkinter.Text(width = 10, height = 1,font = ("Consolas",14,"bold"), borderwidth = 0)          
 
         def Open_Drive(self):
@@ -78,7 +91,7 @@ def Form_Sorting():
 
         def browse_file(self):
             # Remove()
-            setattr(fields,'name',filedialog.askopenfilename(filetypes = (("All files", "*"), ("Template files", "*.type"))))
+            setattr(fields,'name',filedialog.askopenfilename(filetypes = (("All files", "*"), ("Excel Files", "*.xlsx"))))
             wb = openpyxl.load_workbook(fields.name)
             if file_name.get(1.0,END) != "":
                 file_name.delete(1.0,END)
@@ -119,7 +132,9 @@ def Form_Sorting():
             for i in range(2, fields.row + 1):    
                 choices_opted = str(fields.sheet.cell(i, operating_column).value).split(",")      
                 file_name = [choice.strip() for choice in choices_opted]
-                for field_types in file_name:                                 
+                for field_types in file_name:
+                    if field_types == "None":
+                        continue                                 
                     try:
                         new_wb = openpyxl.load_workbook(f"{field_types}.xlsx")
                     except FileNotFoundError:
