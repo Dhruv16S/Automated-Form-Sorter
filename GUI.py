@@ -1,6 +1,6 @@
-from os import name
+
 import tkinter
-from tkinter.constants import BOTTOM, END, LEFT, NE, RIGHT, SE, TOP, Y
+from tkinter.constants import BOTTOM, E, END, LEFT, NE, NW, RIGHT, SE, TOP, Y
 import openpyxl
 from tkinter import  filedialog
 from PIL import Image, ImageTk
@@ -12,6 +12,7 @@ import random
 import string
 from email.message import EmailMessage
 import time
+# BACKGROUND = "#1E2329"
 regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
 h = 500; w = 700
 window = tkinter.Tk()
@@ -22,6 +23,8 @@ y = (hs/2) - (h/2)
 window.title("Unified Form Manager")
 window.minsize(height = h, width = w)
 window.geometry('%dx%d+%d+%d' % (w, h, x, y))
+# window.config(bg = BACKGROUND)
+# window.config(bg = "white")
 
 def Remove():
     widgets = window.winfo_children()
@@ -33,7 +36,7 @@ def Remove():
 
 def Form_Sorting():
     Remove()
-    class TkinterReturns_Form:
+    class TkinterReturns_From:
         def __init__(self):
             self.column = 0
 
@@ -67,7 +70,6 @@ def Form_Sorting():
             self.scrollbar = tkinter.Scrollbar(window)
             self.choices_available_textbox = tkinter.Text(height = 5, width = 50, font = ("Consolas",10,"bold"), borderwidth = 0, yscrollcommand = self.scrollbar.set)
             self.scrollbar.place(in_ = self.choices_available_textbox, relx = 1.0)
-            # self.scrollbar = tkinter.Scrollbar(self.choices_available_textbox)
             self.scrollbar.config(command = self.choices_available_textbox.yview)
             for options in self.choices_available : 
                 self.choices_available_textbox.insert(END, u'\u2022 {}\n'.format(options))
@@ -110,7 +112,7 @@ def Form_Sorting():
                 self.Fields_available.insert(value, key)
                 self.Fields_available.bind("<<ListboxSelect>>",fields.Field_Selected)
                 self.Fields_available.place(x = 40, y = 290)
-    fields = TkinterReturns_Form()
+    fields = TkinterReturns_From()
     fields.browse_img = Image.open("Images/Browse.png").resize((150,150))
     fields.browse_img = ImageTk.PhotoImage(fields.browse_img)
     fields.browse_Button = tkinter.Button(image = fields.browse_img, command = fields.browse_file, borderwidth = 0)
@@ -178,7 +180,7 @@ def Form_Sorting():
                             else:
                                 new_sheet.cell(new_rows,j,value = fields.sheet.cell(i,j).value)    
                             new_wb.save(f"{excel_file}.xlsx")
-
+        completed = tkinter.Label(text = "Task Completed", font = ("Consolas")).place(x = 286, y = 450)
 
     
 def Send_Mails():
@@ -186,6 +188,76 @@ def Send_Mails():
     class TkinterReturns_Mail:
         def __init__(self):
             self.file_path = "../"
+            self.nextpage_img = "../"
+            self.msg = EmailMessage()
+            self.positions2 = {}
+            self.widgets2 = []
+            self.createpage2 = True
+            self.next_button = tkinter.Button()
+            self.visitednextpage = False
+            self.visitedprevious = False
+            self.attachment_path = "../"
+
+        def BrowseAttachments(self):
+            self.attachment_path = filedialog.askopenfilename(filetypes = (("All files", "*"), ("Template files", "*.type")))
+
+
+        def Page2Options(self):
+            if self.state.get():
+                self.browse_attachment = tkinter.Button(text = "Browse", borderwidth = 0, command = self.BrowseAttachments)
+                self.browse_attachment
+
+            
+
+        def NextPage(self):
+            if not self.visitednextpage:
+                self.positions = {}
+                self.widgets = window.winfo_children()
+                for item in self.widgets :
+                    if item.winfo_children() :
+                        self.widgets.extend(item.winfo_children())
+                for item in self.widgets:
+                    self.positions[item] = [item.winfo_x(), item.winfo_y()]
+                self.visitednextpage = True
+            for item in self.widgets:
+                item.place_forget()
+            for item in self.widgets2:
+                item.place(x = self.positions2[item][0], y = self.positions2[item][1])
+            if self.createpage2:
+                self.state = tkinter.IntVar()
+                self.add_attachments = tkinter.Checkbutton(text = "Add Attachments", variable = self.state, command = self.Page2Options)
+                self.add_attachments.place(x = 50, y = 100)
+                #Not adding additional conditions, as Excel Sheet already classifies and it will be easier to add additional details there itself.
+                self.previouspage_img = Image.open("Images/PreviousPage.png").resize((50,50))
+                self.previouspage_img = ImageTk.PhotoImage(self.previouspage_img)
+                self.previouspage = tkinter.Button(image = self.previouspage_img, command = self.PreviousPage, borderwidth = 0)
+                self.previouspage.place(x = 0, y = 250)
+                
+
+        def PreviousPage(self):
+            if not self.visitedprevious:
+                self.positions2 = {}
+                self.widgets2 = window.winfo_children()
+                for item in self.widgets2 :
+                    if item.winfo_children() :
+                        self.widgets2.extend(item.winfo_children())
+                for item in self.widgets2:
+                    self.positions2[item] = [item.winfo_x(), item.winfo_y()]
+                if len(list(set(self.widgets2).intersection(set(self.widgets)))) == 0:
+                    self.widgets2 = self.widgets
+                else:
+                    self.widgets2 = list(set(self.widgets2).union(set(self.widgets)) - set(self.widgets2).intersection(set(self.widgets)))
+                self.visitedprevious = True
+            for items in self.widgets2:
+                    items.place_forget()
+            for item in self.widgets:
+                if self.positions[item][0] == self.positions[item][1] == 0:
+                    continue
+                try : 
+                    item.place(x = self.positions[item][0], y = self.positions[item][1])
+                except:
+                    pass
+            self.createpage2 = False
 
     def DisplayGmailPassword():
         if state_check.get() == 1:
@@ -219,7 +291,9 @@ def Send_Mails():
                 mailbody_check[f"<<{sheet.cell(1, i).value}>>"] = i
         for i in range(1, sheet.max_column + 1):
             if addresses.find(f"<<{sheet.cell(1, i).value}>>") != -1:
-                mailbody_check["emailid"] = i 
+                mailbody_check["emailid"] = i
+        mails.msg["From"] =  from_address.get(1.0, END).strip()
+        mails.msg["Subject"] = subject.get(1.0,END).strip()
         with smtplib.SMTP("smtp.gmail.com") as connection:
             connection.starttls()
             connection.login(user = from_address.get(1.0, END).strip(), password = gmail_password.get().strip())
@@ -227,23 +301,28 @@ def Send_Mails():
                 unique_messages = email_message
                 for field_name, column_number in mailbody_check.items():
                     unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
-                connection.sendmail(from_addr = from_address.get(1.0, END).strip(), to_addrs = sheet.cell(row = i, column = mailbody_check["emailid"]).value, msg = f"Subject:{subject.get(1.0,END).strip()}\n\n{unique_messages}")
+                mails.msg["To"] = sheet.cell(row = i, column = mailbody_check["emailid"]).value
+                mails.msg.set_content(unique_messages)
+                connection.send_message(mails.msg)
+                del mails.msg["To"]
 
 
-    mails = TkinterReturns_Mail()
-    scroll = tkinter.Scrollbar()
-    scroll.place(x = 260, y = 150) 
+    mails = TkinterReturns_Mail() 
     browsed_file = tkinter.Button(text = "Browse Files : ", borderwidth = 0, command = Browse_File)
     browsed_file.place(x = 50, y = 100)
+    mails.nextpage_img = Image.open("Images/NextPage.png")
+    mails.nextpage_img = ImageTk.PhotoImage(mails.nextpage_img)
+    mails.next_button = tkinter.Button(image = mails.nextpage_img, command = mails.NextPage, borderwidth = 0)
+    mails.next_button.place(x = 650, y = 250)
+    # operation_name = tkinter.Label(text = "Automated Mailing", font = ("Consolas",36,"bold"))
+    # operation_name.pack(side = LEFT, anchor = NW)
     file_name = tkinter.Text(height = 1, width = 76, font = ("Consolas",10,"bold"), borderwidth = 0)
     file_name.place(x = 140, y = 100)
     text_label = tkinter.Label(text = "The following fields were identified from The Excel Sheet : ").place(x = 50, y = 120)
     displaying_fields = tkinter.Text(height = 5, width = 35, font = ("Consolas",10,"bold"), borderwidth = 0)
     displaying_fields.place(x = 50, y = 150)
-    displaying_fields.config(yscrollcommand=scroll.set)
-    scroll.config(command=displaying_fields.yview)
     subject_label = tkinter.Label(text = "Subject : ").place(x = 50, y = 245)
-    subject = tkinter.Text(height = 1, width = 60, font = ("Consolas",12,"bold"), borderwidth = 0)
+    subject = tkinter.Text(height = 1, width = 45, font = ("Consolas",12,"bold"), borderwidth = 0)
     subject.place(x = 115, y = 244)
     fromaddress_label = tkinter.Label(text = "From : ").place(x = 300, y = 160)
     from_address = tkinter.Text(height = 1, width = 28, font = ("Consolas",10,"bold"), borderwidth = 0)
@@ -265,8 +344,9 @@ def Send_Mails():
     mail_body.place(x = 50, y = 295)
     mail_preview = tkinter.Button(text = "Send Mails", borderwidth = 0, command = Write_Mails)   #or mail preview
     mail_preview.place(x = 50, y = 468)
-    homebutton = tkinter.Button(text = "Go to home", command = on_home.MainMenu).pack(side = TOP, anchor = NE)
-    loggedin = tkinter.Label(text = f"Logged in as {on_home.username}").pack(side = BOTTOM, anchor = SE)
+    # nextpage_img = Image.open().resize((50, 50))
+    homebutton = tkinter.Button(text = "Go to home", command = on_home.MainMenu).place(x = 620, y= 0)
+    loggedin = tkinter.Label(text = f"Logged in as {on_home.username}").place(x = 470, y= 480)
 
 class Home:
 
@@ -279,7 +359,7 @@ class Home:
 
     def HomePage(self):
         on_home.homebutton.destroy()
-        self.signin_img = Image.open("Images/Signin.png")
+        self.signin_img = Image.open("Images/SignUp.png")
         self.signin_img = ImageTk.PhotoImage(self.signin_img)
         self.signin_button = tkinter.Button(image = self.signin_img, borderwidth = 0, command = on_home.Clicked_Signin)
         self.signin_button.place(x = 60, y = 100)
@@ -357,7 +437,7 @@ class Home:
             self.verificationwidget.config(font = ("red"))
             self.incorrectid = tkinter.Label(text = "Incorrect Authentication id", font = ("TimesNewRoman"), fg = "red").place(x = 310, y = 360)
         else:
-            self.userdetails_img = Image.open("Images/Signup Page 2.png")
+            self.userdetails_img = Image.open("Images/SignupPage 3.png")
             self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
             self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
             self.user.place(x = 262, y = 100)
@@ -381,7 +461,7 @@ class Home:
         all = self.lower + self.upper + self.num   #+ symbols
         temp=random.sample(all,5)
         self.password="".join(temp)
-        self.userdetails_img = Image.open("Images/Signup Page 3.png")
+        self.userdetails_img = Image.open("Images/SignupPage 2.png")
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 262, y = 100)
@@ -402,7 +482,7 @@ class Home:
     def Clicked_Signin(self):
         self.homebutton.destroy()
         app.destroy(); login_button.destroy()
-        self.userdetails_img = Image.open("Images/Signup Page 1.png")
+        self.userdetails_img = Image.open("Images/SignupPage 1.png")
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 262, y = 100)
@@ -417,7 +497,7 @@ class Home:
     def Clicked_Login(self):
         self.homebutton.destroy()
         app.destroy(); signin_button.destroy()
-        self.userdetails_img = Image.open("Images/UserDetails.png")
+        self.userdetails_img = Image.open("Images/User.png")
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 60, y = 100)
@@ -435,7 +515,7 @@ class Home:
 
 on_home = Home()
 
-signin_img = Image.open("Images/Signin.png")
+signin_img = Image.open("Images/SignUp.png")
 signin_img = ImageTk.PhotoImage(signin_img)
 signin_button = tkinter.Button(image = signin_img, borderwidth = 0, command = on_home.Clicked_Signin)
 signin_button.place(x = 60, y = 100)
@@ -452,7 +532,8 @@ login_button.place(x = 462, y = 100)
 
 on_home.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
 
+# window.bind("<Motion>", lambda event : print(event.x, event.y))
+
 window.mainloop()
 
-# font = ("Consolas",14,"bold"), borderwidth = 0
-# dscuderiaferrari@gmail.com
+
