@@ -1,4 +1,3 @@
-
 import tkinter
 from tkinter.constants import BOTTOM, E, END, LEFT, NE, NW, RIGHT, SE, TOP, Y
 import openpyxl
@@ -11,8 +10,10 @@ import smtplib
 import random
 import string
 from email.message import EmailMessage
+from email.mime.text import MIMEText
 import time
-# BACKGROUND = "#1E2329"
+BACKGROUND = "#afddf9"
+BORDERCOLOR = "#13689c"
 regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
 h = 500; w = 700
 window = tkinter.Tk()
@@ -25,6 +26,7 @@ window.minsize(height = h, width = w)
 window.geometry('%dx%d+%d+%d' % (w, h, x, y))
 # window.config(bg = BACKGROUND)
 # window.config(bg = "white")
+# BACKGROUND = "white"
 
 def Remove():
     widgets = window.winfo_children()
@@ -112,6 +114,8 @@ def Form_Sorting():
                 self.Fields_available.insert(value, key)
                 self.Fields_available.bind("<<ListboxSelect>>",fields.Field_Selected)
                 self.Fields_available.place(x = 40, y = 290)
+
+
     fields = TkinterReturns_From()
     fields.browse_img = Image.open("Images/Browse.png").resize((150,150))
     fields.browse_img = ImageTk.PhotoImage(fields.browse_img)
@@ -187,6 +191,7 @@ def Send_Mails():
     Remove()
     class TkinterReturns_Mail:
         def __init__(self):
+            self.state = tkinter.IntVar()
             self.file_path = "../"
             self.nextpage_img = "../"
             self.msg = EmailMessage()
@@ -200,14 +205,19 @@ def Send_Mails():
 
         def BrowseAttachments(self):
             self.attachment_path = filedialog.askopenfilename(filetypes = (("All files", "*"), ("Template files", "*.type")))
-
+            if self.attachment_name.get(1.0, END) != "":
+                self.attachment_name.delete(1.0, END) 
+            self.attachment_name.insert(END,f"{self.attachment_path}")
 
         def Page2Options(self):
             if self.state.get():
                 self.browse_attachment = tkinter.Button(text = "Browse", borderwidth = 0, command = self.BrowseAttachments)
-                self.browse_attachment
-
-            
+                self.browse_attachment.place(x = 55, y = 125)
+                self.attachment_name = tkinter.Text(height = 1, width = 75, font = ("Consolas",10,"bold"), borderwidth = 0)
+                self.attachment_name.place(x = 105, y = 127) #an issue while removing multiple times
+            else:
+                self.browse_attachment.destroy()
+                self.attachment_name.destroy()           
 
         def NextPage(self):
             if not self.visitednextpage:
@@ -232,6 +242,7 @@ def Send_Mails():
                 self.previouspage_img = ImageTk.PhotoImage(self.previouspage_img)
                 self.previouspage = tkinter.Button(image = self.previouspage_img, command = self.PreviousPage, borderwidth = 0)
                 self.previouspage.place(x = 0, y = 250)
+                
                 
 
         def PreviousPage(self):
@@ -259,6 +270,12 @@ def Send_Mails():
                     pass
             self.createpage2 = False
 
+    # def PlaceCanvas():
+    #     on_home.canvas = tkinter.Canvas(width=700, height=500, highlightthickness=0)
+    #     on_home.window_img = tkinter.PhotoImage(file="Images\Blue_bg.png")
+    #     on_home.canvas.create_image(350, 250, image=on_home.window_img)
+    #     on_home.canvas.place(x = 0, y = 0) 
+
     def DisplayGmailPassword():
         if state_check.get() == 1:
             gmail_password.config(show = "")
@@ -277,6 +294,8 @@ def Send_Mails():
         for i in range(1, col + 1):
             field_list.append(sheet.cell(row = 1, column = i).value)
         setattr(mails, "fields_available", field_list)
+        if displaying_fields.get(1.0, END) != "":
+            displaying_fields.delete(1.0, END)
         for name in mails.fields_available:
             displaying_fields.insert(END, u'\u2022 {}\n'.format(name))
     
@@ -292,8 +311,14 @@ def Send_Mails():
         for i in range(1, sheet.max_column + 1):
             if addresses.find(f"<<{sheet.cell(1, i).value}>>") != -1:
                 mailbody_check["emailid"] = i
+        if mails.state.get():
+            with open(f"{mails.attachment_path}", "rb") as file:
+                data = file.read()
+                attachedfile_name = file.name
+            mails.msg.add_attachment(data, maintype = "application", subtype = "octet-stream", filename = attachedfile_name)
         mails.msg["From"] =  from_address.get(1.0, END).strip()
         mails.msg["Subject"] = subject.get(1.0,END).strip()
+          #non jpeg, jpg, png files only
         with smtplib.SMTP("smtp.gmail.com") as connection:
             connection.starttls()
             connection.login(user = from_address.get(1.0, END).strip(), password = gmail_password.get().strip())
@@ -302,12 +327,14 @@ def Send_Mails():
                 for field_name, column_number in mailbody_check.items():
                     unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
                 mails.msg["To"] = sheet.cell(row = i, column = mailbody_check["emailid"]).value
-                mails.msg.set_content(unique_messages)
+                mails.msg.attach(MIMEText(unique_messages,'plain'))
                 connection.send_message(mails.msg)
                 del mails.msg["To"]
 
 
-    mails = TkinterReturns_Mail() 
+
+    mails = TkinterReturns_Mail()
+    # PlaceCanvas()
     browsed_file = tkinter.Button(text = "Browse Files : ", borderwidth = 0, command = Browse_File)
     browsed_file.place(x = 50, y = 100)
     mails.nextpage_img = Image.open("Images/NextPage.png")
@@ -344,11 +371,16 @@ def Send_Mails():
     mail_body.place(x = 50, y = 295)
     mail_preview = tkinter.Button(text = "Send Mails", borderwidth = 0, command = Write_Mails)   #or mail preview
     mail_preview.place(x = 50, y = 468)
-    # nextpage_img = Image.open().resize((50, 50))
     homebutton = tkinter.Button(text = "Go to home", command = on_home.MainMenu).place(x = 620, y= 0)
     loggedin = tkinter.Label(text = f"Logged in as {on_home.username}").place(x = 470, y= 480)
 
 class Home:
+
+    # def __init__(self):
+    #     self.canvas = tkinter.Canvas(width=700, height=500, highlightthickness=0)
+    #     self.window_img = tkinter.PhotoImage(file="Images\Blue_bg.png")
+    #     self.canvas.create_image(350, 250, image=self.window_img)
+    #     self.canvas.place(x = 0, y = 0)
 
     def DisplayPassword(self):
         if self.state_check.get() == 1:
@@ -378,6 +410,10 @@ class Home:
     def MainMenu(self):
         Remove()
         on_home.homebutton.destroy()
+        # self.canvas = tkinter.Canvas(width=700, height=500, highlightthickness=0)
+        # self.window_img = tkinter.PhotoImage(file="Images\Blue_bg.png")
+        # self.canvas.create_image(350, 250, image=self.window_img)
+        # self.canvas.place(x = 0, y = 0)
         # self.incorrectpassword.destroy()
         self.sort_buttonimg = Image.open("Images/Excel_Icon.png").resize((125, 125))
         self.sort_buttonimg = ImageTk.PhotoImage(self.sort_buttonimg)
@@ -514,6 +550,8 @@ class Home:
         self.homebutton.pack(side = TOP, anchor = NE)
 
 on_home = Home()
+
+
 
 signin_img = Image.open("Images/SignUp.png")
 signin_img = ImageTk.PhotoImage(signin_img)
