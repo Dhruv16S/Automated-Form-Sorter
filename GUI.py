@@ -1,7 +1,7 @@
 import tkinter
 from tkinter.constants import BOTTOM, E, END, LEFT, NE, NW, RIGHT, SE, TOP, Y
 import openpyxl
-from tkinter import Menu, StringVar, filedialog
+from tkinter import filedialog
 from PIL import Image, ImageTk
 from selenium import webdriver
 import json
@@ -12,7 +12,6 @@ import string
 from email.message import EmailMessage
 from email.mime.text import MIMEText
 import os
-import time
 WINDOWBG1 = "#ffd9e2"
 WINDOWBG2 = "#ceffff"
 WINDOWBG3 = "#fff0c2"
@@ -60,6 +59,23 @@ def Form_Sorting():
                     self.submit_choices.destroy()
                 Creating_Files(self.column)
             elif self.radio_state.get() == 2:
+                def RemoveHelp():
+                    fields.help.destroy()
+                def button_clicked():
+                    fields.n += 1
+                    if(fields.n % 2 != 0):
+                        fields.help = tkinter.Text(height = 5, width = 34,background = WINDOWBG3, font = ("Consolas",7,"bold"), borderwidth = 0)
+                        fields.help.insert(END, "' , ' separated values are \nconsidered in the same file\n' ; ' separated values are \nconsidered as different files")
+                        fields.help.place(x = 0, y = 395)
+                        window.mainloop()
+                    elif(fields.n % 2 == 0):
+                        RemoveHelp()
+
+                fields.helpimg = Image.open("Images/Help.png")
+                fields.helpimg = ImageTk.PhotoImage(fields.helpimg)
+                helpbutton=tkinter.Button(image = fields.helpimg,command=button_clicked, borderwidth = 0, background = WINDOWBG2)
+                helpbutton.place(x = 168, y = 450)
+
                 self.custom_choice = tkinter.Text(width = 30, height = 1, font = ("Consolas",12,"bold"), borderwidth = 0)
                 self.custom_choice.place(in_ = self.Fields_available, relx = 1.0, x = 5, y = 140)
                 self.custom_choice.focus()
@@ -126,25 +142,6 @@ def Form_Sorting():
                 self.Fields_available.place(x = 40, y = 290)
 
     fields = TkinterReturns_From()
-
-    def RemoveHelp():
-        fields.canvas.destroy()
-    def button_clicked():
-        fields.n += 1
-        if(fields.n % 2 != 0):
-            fields.canvas=tkinter.Canvas(window,width=500,height=400, background = WINDOWBG2)
-            fields.canvas.place(x = 50, y = 35)
-            img = Image.open('Images/Help1.jpeg')
-            img = ImageTk.PhotoImage(img)
-            fields.canvas.create_image(20,20,anchor=NW,image=img)
-            window.mainloop()
-        elif(fields.n % 2 == 0):
-            RemoveHelp()
-
-    fields.helpimg = Image.open("Images/Help.png")
-    fields.helpimg = ImageTk.PhotoImage(fields.helpimg)
-    helpbutton=tkinter.Button(image = fields.helpimg,command=button_clicked, borderwidth = 0, background = WINDOWBG2)
-    helpbutton.pack(side = LEFT, anchor = NW)
 
     fields.browse_img = Image.open("Images/Browse.png").resize((150,150))
     fields.browse_img = ImageTk.PhotoImage(fields.browse_img)
@@ -325,25 +322,6 @@ def Send_Mails():
 
     mails = TkinterReturns_Mail()
 
-    def RemoveHelp():
-        mails.canvas.destroy()
-    def button_clicked():
-        mails.n += 1
-        if(mails.n % 2 != 0):
-            mails.canvas=tkinter.Canvas(window,width=600,height=480, background = WINDOWBG2)
-            mails.canvas.place(x = 50, y = 35)
-            img = Image.open('Images/Help2.jpeg')
-            img = ImageTk.PhotoImage(img)
-            mails.canvas.create_image(10,10,anchor=NW,image=img)
-            window.mainloop()
-        elif(mails.n % 2 == 0):
-            RemoveHelp()
-
-    mails.helpimg = Image.open("Images/Help.png")
-    mails.helpimg = ImageTk.PhotoImage(mails.helpimg)
-    helpbutton=tkinter.Button(image = mails.helpimg,command=button_clicked, borderwidth = 0, background = WINDOWBG2)
-    helpbutton.pack(side = LEFT, anchor = NW)
-
     def DisplayGmailPassword():
         if state_check.get() == 1:
             gmail_password.config(show = "")
@@ -439,6 +417,22 @@ def Send_Mails():
     enter_body.place(x = 50, y = 275)
     mail_body = tkinter.Text(height = 7, width = 75, font = ("Consolas",11,"bold"), borderwidth = 0)
     mail_body.place(x = 50, y = 295)
+    def RemoveHelp():
+        mails.help.destroy()
+    def button_clicked():
+        mails.n += 1
+        if(mails.n % 2 != 0):
+            mails.help = tkinter.Text(height = 2, width = 95,background = WINDOWBG3, font = ("Consolas",7,"bold"), borderwidth = 0)
+            mails.help.insert(END, "To include variable fields from the excel file, enclose the fields within '<< >>'\nEg : <<Name>>, Would include all the names mentioned in the Names field of the Excel Sheet")
+            mails.help.place(x = 68, y = 432)
+            window.mainloop()
+        elif(mails.n % 2 == 0):
+            RemoveHelp()
+
+    mails.helpimg = Image.open("Images/Help.png")
+    mails.helpimg = ImageTk.PhotoImage(mails.helpimg)
+    helpbutton=tkinter.Button(image = mails.helpimg,command=button_clicked, borderwidth = 0, background = WINDOWBG2)
+    helpbutton.place(x = 48, y = 435)
     mails.home_img = Image.open("Images/Home.png")
     mails.home_img = ImageTk.PhotoImage(mails.home_img)
     homebutton = tkinter.Button(image = mails.home_img, command = on_home.MainMenu, background = WINDOWBG2,borderwidth = 0)
