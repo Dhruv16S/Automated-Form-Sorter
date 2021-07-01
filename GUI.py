@@ -1,7 +1,7 @@
 import tkinter
 from tkinter.constants import BOTTOM, E, END, LEFT, NE, NW, RIGHT, SE, TOP, Y
 import openpyxl
-from tkinter import  filedialog
+from tkinter import Menu, StringVar, filedialog
 from PIL import Image, ImageTk
 from selenium import webdriver
 import json
@@ -11,9 +11,12 @@ import random
 import string
 from email.message import EmailMessage
 from email.mime.text import MIMEText
+import os
 import time
-BACKGROUND = "#afddf9"
-BORDERCOLOR = "#13689c"
+WINDOWBG1 = "#ffd9e2"
+WINDOWBG2 = "#ceffff"
+WINDOWBG3 = "#fff0c2"
+WINDOWBG4 = "#ffda52"
 regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
 h = 500; w = 700
 window = tkinter.Tk()
@@ -24,9 +27,7 @@ y = (hs/2) - (h/2)
 window.title("Unified Form Manager")
 window.minsize(height = h, width = w)
 window.geometry('%dx%d+%d+%d' % (w, h, x, y))
-# window.config(bg = BACKGROUND)
-# window.config(bg = "white")
-# BACKGROUND = "white"
+window.config(background = WINDOWBG2)
 
 def Remove():
     widgets = window.winfo_children()
@@ -41,6 +42,10 @@ def Form_Sorting():
     class TkinterReturns_From:
         def __init__(self):
             self.column = 0
+            self.n = 0
+            self.notcreated = []
+            self.finalmsg = tkinter.Label()
+            self.dropdown = tkinter.Label()
 
         def Fields_Received(self):
             self.fields_fromuser = self.custom_choice.get(1.0, END)
@@ -48,10 +53,12 @@ def Form_Sorting():
 
         def Option_Selected(self):
             if self.radio_state.get() == 1:
-                Creating_Files(self.column)
+                self.finalmsg.destroy()
+                self.dropdown.destroy()
                 if self.custom_choice.winfo_ismapped():
                     self.custom_choice.destroy()
                     self.submit_choices.destroy()
+                Creating_Files(self.column)
             elif self.radio_state.get() == 2:
                 self.custom_choice = tkinter.Text(width = 30, height = 1, font = ("Consolas",12,"bold"), borderwidth = 0)
                 self.custom_choice.place(in_ = self.Fields_available, relx = 1.0, x = 5, y = 140)
@@ -68,7 +75,10 @@ def Form_Sorting():
                 for option in cell_choices:
                     if option not in self.choices_available:
                         self.choices_available.append(option)
-            self.choices_available.remove("None")
+            try:
+                self.choices_available.remove("None")
+            except:
+                pass
             self.scrollbar = tkinter.Scrollbar(window)
             self.choices_available_textbox = tkinter.Text(height = 5, width = 50, font = ("Consolas",10,"bold"), borderwidth = 0, yscrollcommand = self.scrollbar.set)
             self.scrollbar.place(in_ = self.choices_available_textbox, relx = 1.0)
@@ -77,8 +87,8 @@ def Form_Sorting():
                 self.choices_available_textbox.insert(END, u'\u2022 {}\n'.format(options))
             self.choices_available_textbox.place(in_ = self.Fields_available, relx = 1.0, rely = 0)
             self.radio_state = tkinter.IntVar()
-            self.radiobutton1 = tkinter.Radiobutton(text = "Create a New Excel File for every distinct value encountered ", value = 1, variable = self.radio_state, command = fields.Option_Selected)
-            self.radiobutton2 = tkinter.Radiobutton(text = "Create an Excel File for fields that contain : ", value = 2, variable = self.radio_state, command = fields.Option_Selected)
+            self.radiobutton1 = tkinter.Radiobutton(text = "Create a New Excel File for every distinct value encountered ", value = 1, variable = self.radio_state, command = fields.Option_Selected, background = WINDOWBG2)
+            self.radiobutton2 = tkinter.Radiobutton(text = "Create an Excel File for fields that contain : ", value = 2, variable = self.radio_state, command = fields.Option_Selected, background = WINDOWBG2)
             self.radiobutton1.place(in_ = self.Fields_available, relx = 1.0, x = 5, y = 80)
             self.radiobutton2.place(in_ = self.Fields_available, relx = 1.0, x = 5, y = 110)
             self.custom_choice = tkinter.Text(width = 10, height = 1,font = ("Consolas",14,"bold"), borderwidth = 0)          
@@ -108,31 +118,52 @@ def Form_Sorting():
             for i in range(1, self.column + 1):
                 self.Sheet_Parameters[self.sheet.cell(row = 1, column = i).value] = i
 
-            label = tkinter.Label(text = "The following fields have been identified.\nHow would you like to classify the form : ").place(x = 40, y = 242)
+            label = tkinter.Label(text = "The following fields have been identified.\nHow would you like to classify the form : ", background = WINDOWBG2).place(x = 40, y = 242)
             self.Fields_available = tkinter.Listbox(height = len(self.Sheet_Parameters), borderwidth=0, font = ("Consolas",10,"bold"))
             for key, value in self.Sheet_Parameters.items():
                 self.Fields_available.insert(value, key)
                 self.Fields_available.bind("<<ListboxSelect>>",fields.Field_Selected)
                 self.Fields_available.place(x = 40, y = 290)
 
-
     fields = TkinterReturns_From()
+
+    def RemoveHelp():
+        fields.canvas.destroy()
+    def button_clicked():
+        fields.n += 1
+        if(fields.n % 2 != 0):
+            fields.canvas=tkinter.Canvas(window,width=500,height=400, background = WINDOWBG2)
+            fields.canvas.place(x = 50, y = 35)
+            img = Image.open('Images/Help1.jpeg')
+            img = ImageTk.PhotoImage(img)
+            fields.canvas.create_image(20,20,anchor=NW,image=img)
+            window.mainloop()
+        elif(fields.n % 2 == 0):
+            RemoveHelp()
+
+    fields.helpimg = Image.open("Images/Help.png")
+    fields.helpimg = ImageTk.PhotoImage(fields.helpimg)
+    helpbutton=tkinter.Button(image = fields.helpimg,command=button_clicked, borderwidth = 0, background = WINDOWBG2)
+    helpbutton.pack(side = LEFT, anchor = NW)
+
     fields.browse_img = Image.open("Images/Browse.png").resize((150,150))
     fields.browse_img = ImageTk.PhotoImage(fields.browse_img)
-    fields.browse_Button = tkinter.Button(image = fields.browse_img, command = fields.browse_file, borderwidth = 0)
+    fields.browse_Button = tkinter.Button(image = fields.browse_img, command = fields.browse_file, borderwidth = 0, background = WINDOWBG2)
     fields.browse_Button.place(x = 175, y = 40)
-    browselabel = tkinter.Label(text = "Browse Files").place(x = 200, y = 175)
+    browselabel = tkinter.Label(text = "Browse Files", background = WINDOWBG2).place(x = 200, y = 175)
     fields.drive_img = Image.open("Images/GDrive.png").resize((150,150))
     fields.drive_img = ImageTk.PhotoImage(fields.drive_img)
-    fields.download_Button = tkinter.Button(image = fields.drive_img, command = fields.Open_Drive,borderwidth = 0)
+    fields.download_Button = tkinter.Button(image = fields.drive_img, command = fields.Open_Drive,borderwidth = 0, background = WINDOWBG2)
     fields.download_Button.place(x = 350, y = 40)
-    drivelabel = tkinter.Label(text = "Download From Drive").place(x = 360, y = 175)
-    openfile_label = tkinter.Label(text = "File Opened : ").place(x = 125, y = 202)
+    drivelabel = tkinter.Label(text = "Download From Drive", background = WINDOWBG2).place(x = 360, y = 175)
+    openfile_label = tkinter.Label(text = "File Opened : ", background = WINDOWBG2).place(x = 125, y = 202)
     file_name = tkinter.Text(height = 1, width = 80, font = ("Consolas",8,"bold"), borderwidth = 0)
     file_name.place(x = 210, y = 205)
-    
-    homebutton = tkinter.Button(text = "Go to home", command = on_home.MainMenu).pack(side = TOP, anchor = NE)
-    loggedin = tkinter.Label(text = f"Logged in as {on_home.username}").pack(side = BOTTOM, anchor = SE)
+    fields.home_img = Image.open("Images/Home.png")
+    fields.home_img = ImageTk.PhotoImage(fields.home_img)
+    homebutton = tkinter.Button(image = fields.home_img, command = on_home.MainMenu, background = WINDOWBG2, borderwidth = 0)
+    homebutton.pack(side = TOP, anchor = NE)
+    loggedin = tkinter.Label(text = f"Logged in as {on_home.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
     def Creating_Files(operating_column):
         if fields.radio_state.get() == 1:
             for i in range(2, fields.row + 1):    
@@ -184,14 +215,25 @@ def Form_Sorting():
                             else:
                                 new_sheet.cell(new_rows,j,value = fields.sheet.cell(i,j).value)    
                             new_wb.save(f"{excel_file}.xlsx")
-        completed = tkinter.Label(text = "Task Completed", font = ("Consolas")).place(x = 286, y = 450)
+            not_created = []
+            for files in users_multiplelist:
+                file = files.strip("\n")
+                if not os.path.exists(f"{file}.xlsx"):
+                    not_created.append(file)
+            fields.__setattr__("notcreated",not_created)
+        if len(fields.notcreated) == 0:
+            fields.finalmsg = tkinter.Label(text = "Process Complete", font = ("Consolas"), background = WINDOWBG2)
+            fields.finalmsg.place(x = 275, y = 450)
+        else:
+            fields.finalmsg = tkinter.Label(text = f"Following files were not created : ", font = ("Consolas"), background = WINDOWBG2)
+            fields.finalmsg.place(x = 200, y = 450)
+            current = tkinter.StringVar()
+            current.set(fields.notcreated[0])
+            fields.dropdown = tkinter.OptionMenu(window, current, *fields.notcreated)
+            fields.dropdown.place(x = 560, y = 450)
 
     
 def Send_Mails():
-    canvas = tkinter.Canvas(width=700, height=500, highlightthickness=0)
-    window_img = tkinter.PhotoImage(file="Images\Blue_bg.png")
-    canvas.create_image(350, 250, image=window_img)
-    canvas.place(x = 0, y = 0)
     Remove()
     class TkinterReturns_Mail:
         def __init__(self):
@@ -206,6 +248,7 @@ def Send_Mails():
             self.visitednextpage = False
             self.visitedprevious = False
             self.attachment_path = "../"
+            self.n = 0
 
         def BrowseAttachments(self):
             self.attachment_path = filedialog.askopenfilename(filetypes = (("All files", "*"), ("Template files", "*.type")))
@@ -215,7 +258,7 @@ def Send_Mails():
 
         def Page2Options(self):
             if self.state.get():
-                self.browse_attachment = tkinter.Button(text = "Browse", borderwidth = 0, command = self.BrowseAttachments)
+                self.browse_attachment = tkinter.Button(text = "Browse", borderwidth = 0, command = self.BrowseAttachments, background = WINDOWBG2)
                 self.browse_attachment.place(x = 55, y = 125)
                 self.attachment_name = tkinter.Text(height = 1, width = 75, font = ("Consolas",10,"bold"), borderwidth = 0)
                 self.attachment_name.place(x = 105, y = 127) #an issue while removing multiple times
@@ -238,16 +281,20 @@ def Send_Mails():
             for item in self.widgets2:
                 item.place(x = self.positions2[item][0], y = self.positions2[item][1])
             if self.createpage2:
+                loggedin = tkinter.Label(text = f"Logged in as {on_home.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
                 self.state = tkinter.IntVar()
-                self.add_attachments = tkinter.Checkbutton(text = "Add Attachments", variable = self.state, command = self.Page2Options)
+                self.add_attachments = tkinter.Checkbutton(text = "Add Attachments", variable = self.state, command = self.Page2Options, background = WINDOWBG2)
                 self.add_attachments.place(x = 50, y = 100)
                 #Not adding additional conditions, as Excel Sheet already classifies and it will be easier to add additional details there itself.
                 self.previouspage_img = Image.open("Images/PreviousPage.png").resize((50,50))
                 self.previouspage_img = ImageTk.PhotoImage(self.previouspage_img)
-                self.previouspage = tkinter.Button(image = self.previouspage_img, command = self.PreviousPage, borderwidth = 0)
+                self.previouspage = tkinter.Button(image = self.previouspage_img, command = self.PreviousPage, borderwidth = 0, background = WINDOWBG2)
                 self.previouspage.place(x = 0, y = 250)
-                mail_preview = tkinter.Button(text = "Send Mails", borderwidth = 0, command = Write_Mails)   #or mail preview
-                mail_preview.place(x = 50, y = 468)
+                self.send_mailsimg = Image.open("Images/SendMails.png")
+                self.send_mailsimg = ImageTk.PhotoImage(self.send_mailsimg)
+                mail_preview = tkinter.Button(image = self.send_mailsimg, borderwidth = 0, command = Write_Mails, background = WINDOWBG2)   #or mail preview
+                mail_preview.place(x = 50, y = 165)
+                mailpreview_label = tkinter.Label(text = "Send Mails", background = WINDOWBG2).place(x = 50, y = 235)
                 
                 
 
@@ -276,11 +323,26 @@ def Send_Mails():
                     pass
             self.createpage2 = False
 
-    # def PlaceCanvas():
-    #     on_home.canvas = tkinter.Canvas(width=700, height=500, highlightthickness=0)
-    #     on_home.window_img = tkinter.PhotoImage(file="Images\Blue_bg.png")
-    #     on_home.canvas.create_image(350, 250, image=on_home.window_img)
-    #     on_home.canvas.place(x = 0, y = 0) 
+    mails = TkinterReturns_Mail()
+
+    def RemoveHelp():
+        mails.canvas.destroy()
+    def button_clicked():
+        mails.n += 1
+        if(mails.n % 2 != 0):
+            mails.canvas=tkinter.Canvas(window,width=600,height=480, background = WINDOWBG2)
+            mails.canvas.place(x = 50, y = 35)
+            img = Image.open('Images/Help2.jpeg')
+            img = ImageTk.PhotoImage(img)
+            mails.canvas.create_image(10,10,anchor=NW,image=img)
+            window.mainloop()
+        elif(mails.n % 2 == 0):
+            RemoveHelp()
+
+    mails.helpimg = Image.open("Images/Help.png")
+    mails.helpimg = ImageTk.PhotoImage(mails.helpimg)
+    helpbutton=tkinter.Button(image = mails.helpimg,command=button_clicked, borderwidth = 0, background = WINDOWBG2)
+    helpbutton.pack(side = LEFT, anchor = NW)
 
     def DisplayGmailPassword():
         if state_check.get() == 1:
@@ -307,8 +369,8 @@ def Send_Mails():
     
     def Write_Mails():
         notsent = []
-        wait_label = tkinter.Label(text = "Please wait...")
-        wait_label.place(x = 200, y = 468)
+        # wait_label = tkinter.Label(text = "Please wait...", background = WINDOWBG2)
+        # wait_label.place(x = 200, y = 468)
         wb = openpyxl.load_workbook(mails.file_path)
         sheet = wb.active
         email_message = mail_body.get(1.0, END)
@@ -329,68 +391,65 @@ def Send_Mails():
                 if mails.state.get():
                     with open(f"{mails.attachment_path}", "rb") as file:
                         data = file.read()
-                        attachedfile_name = file.name
+                    attachedfile_name = os.path.basename(mails.attachment_path)
                     mails.msg.add_attachment(data, maintype = "application", subtype = "octet-stream", filename = attachedfile_name)
                 mails.msg["From"] =  from_address.get(1.0, END).strip()
                 mails.msg["Subject"] = subject.get(1.0,END).strip()
                 unique_messages = email_message
                 for field_name, column_number in mailbody_check.items():
                     unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
-                # print(unique_messages)
                 mails.msg["To"] = sheet.cell(row = i, column = mailbody_check["emailid"]).value
                 mails.msg.attach(MIMEText(unique_messages,'plain'))
                 connection.send_message(mails.msg)
                 del mails.msg["To"]
-            completed_label = tkinter.Label(text = "Process Complete")
-            completed_label.place(x = 200, y = 468)
+            completed_label = tkinter.Label(text = "Process Complete",font = ("Consolas"), background = WINDOWBG2)
+            completed_label.place(x = 200, y = 165)
 
 
-    mails = TkinterReturns_Mail()
-    # PlaceCanvas()
-    browsed_file = tkinter.Button(text = "Browse Files : ", borderwidth = 0, command = Browse_File)
+    
+    browsed_file = tkinter.Button(text = "Browse Files : ", borderwidth = 0, command = Browse_File, background = WINDOWBG2)
     browsed_file.place(x = 50, y = 100)
     mails.nextpage_img = Image.open("Images/NextPage.png")
     mails.nextpage_img = ImageTk.PhotoImage(mails.nextpage_img)
-    mails.next_button = tkinter.Button(image = mails.nextpage_img, command = mails.NextPage, borderwidth = 0)
+    mails.next_button = tkinter.Button(image = mails.nextpage_img, command = mails.NextPage, borderwidth = 0, background = WINDOWBG2)
     mails.next_button.place(x = 650, y = 250)
-    # operation_name = tkinter.Label(text = "Automated Mailing", font = ("Consolas",36,"bold"))
-    # operation_name.pack(side = LEFT, anchor = NW)
     file_name = tkinter.Text(height = 1, width = 76, font = ("Consolas",10,"bold"), borderwidth = 0)
     file_name.place(x = 140, y = 100)
-    text_label = tkinter.Label(text = "The following fields were identified from The Excel Sheet : ").place(x = 50, y = 120)
+    text_label = tkinter.Label(text = "The following fields were identified from The Excel Sheet : ", background = WINDOWBG2).place(x = 50, y = 120)
     displaying_fields = tkinter.Text(height = 5, width = 35, font = ("Consolas",10,"bold"), borderwidth = 0)
     displaying_fields.place(x = 50, y = 150)
-    subject_label = tkinter.Label(text = "Subject : ").place(x = 50, y = 245)
+    subject_label = tkinter.Label(text = "Subject : ", background = WINDOWBG2).place(x = 50, y = 245)
     subject = tkinter.Text(height = 1, width = 45, font = ("Consolas",12,"bold"), borderwidth = 0)
     subject.place(x = 115, y = 244)
-    fromaddress_label = tkinter.Label(text = "From : ").place(x = 300, y = 160)
+    fromaddress_label = tkinter.Label(text = "From : ", background = WINDOWBG2).place(x = 300, y = 160)
     from_address = tkinter.Text(height = 1, width = 28, font = ("Consolas",10,"bold"), borderwidth = 0)
     from_address.insert(END, f"{on_home.username}")
     from_address.place(x = 350, y = 160)
-    gmail_password_label = tkinter.Label(text = "Enter your Gmail Password : ")
+    gmail_password_label = tkinter.Label(text = "Enter your Gmail Password : ", background = WINDOWBG2)
     gmail_password_label.place(x = 300 ,y = 180)
     gmail_password = tkinter.Entry(width = 20, font = ("Consolas",8,"bold"), borderwidth = 0, show = "*")
     gmail_password.place(x = 470 ,y = 185)
     state_check = tkinter.IntVar()
-    show_password = tkinter.Checkbutton(variable = state_check, text = "Show Password", command = DisplayGmailPassword)
+    show_password = tkinter.Checkbutton(variable = state_check, text = "Show Password", command = DisplayGmailPassword, background = WINDOWBG2)
     show_password.place(x = 580, y = 180)
-    toaddress_label = tkinter.Label(text = "To : ").place(x = 300, y = 206)
+    toaddress_label = tkinter.Label(text = "To : ", background = WINDOWBG2).place(x = 300, y = 206)
     to_address = tkinter.Text(height = 1, width = 30, font = ("Consolas",10,"bold"), borderwidth = 0)
     to_address.place(x = 350, y = 210)
-    enter_body = tkinter.Label(text = "Enter the body of the email : ")
+    enter_body = tkinter.Label(text = "Enter the body of the email : ", background = WINDOWBG2)
     enter_body.place(x = 50, y = 275)
     mail_body = tkinter.Text(height = 7, width = 75, font = ("Consolas",11,"bold"), borderwidth = 0)
     mail_body.place(x = 50, y = 295)
-
-    homebutton = tkinter.Button(text = "Go to home", command = on_home.MainMenu).place(x = 620, y= 0)
-    loggedin = tkinter.Label(text = f"Logged in as {on_home.username}").place(x = 470, y= 480)
+    mails.home_img = Image.open("Images/Home.png")
+    mails.home_img = ImageTk.PhotoImage(mails.home_img)
+    homebutton = tkinter.Button(image = mails.home_img, command = on_home.MainMenu, background = WINDOWBG2,borderwidth = 0)
+    homebutton.pack(side = TOP, anchor = NE)
+    loggedin = tkinter.Label(text = f"Logged in as {on_home.username}", background = WINDOWBG2).place(x = 470, y= 480)
 
 class Home:
 
     def __init__(self):
-        self.canvas = tkinter.Canvas(width=700, height=500, highlightthickness=0)
-        self.window_img = tkinter.PhotoImage(file="Images\Blue_bg.png")
-        self.canvas.create_image(350, 250, image=self.window_img)
+        self.next_img = Image.open("Images/NextPageColored.png")
+        self.next_img = ImageTk.PhotoImage(self.next_img)
 
     def DisplayPassword(self):
         if self.state_check.get() == 1:
@@ -420,26 +479,27 @@ class Home:
     def MainMenu(self):
         Remove()
         on_home.homebutton.destroy()
-        self.canvas = tkinter.Canvas(width=700, height=500, highlightthickness=0)
-        self.window_img = tkinter.PhotoImage(file="Images\Blue_bg.png")
-        self.canvas.create_image(350, 250, image=self.window_img)
-        self.canvas.place(x = 0, y = 0)
         self.sort_buttonimg = Image.open("Images/Excel_Icon.png").resize((125, 125))
         self.sort_buttonimg = ImageTk.PhotoImage(self.sort_buttonimg)
-        self.sort_button = tkinter.Button(image = self.sort_buttonimg, borderwidth = 0, command = Form_Sorting).place(x = 90, y = 100)
-        self.sort_buttonlabel = tkinter.Label(text = "Sort Forms").place(x = 135, y = 220)
+        self.sort_button = tkinter.Button(image = self.sort_buttonimg, borderwidth = 0, command = Form_Sorting,background = WINDOWBG2).place(x = 90, y = 100)
+        self.sort_buttonlabel = tkinter.Label(text = "Sort Forms",background = WINDOWBG2).place(x = 135, y = 230)
 
         self.mail_buttonimg = Image.open("Images/Email.png").resize((125, 125))
         self.mail_buttonimg = ImageTk.PhotoImage(self.mail_buttonimg)
-        self.mail_button = tkinter.Button(image = self.mail_buttonimg, borderwidth = 0, command = Send_Mails).place(x = 100, y = 280)
-        self.mail_buttonlabel = tkinter.Label(text = "Send Mails").place(x = 135, y = 400)
+        self.mail_button = tkinter.Button(image = self.mail_buttonimg, borderwidth = 0, command = Send_Mails,background = WINDOWBG2).place(x = 100, y = 280)
+        self.mail_buttonlabel = tkinter.Label(text = "Send Mails", background = WINDOWBG2).place(x = 135, y = 400)
 
-        self.loggedin = tkinter.Label(text = f"Logged in as {self.username}").pack(side = BOTTOM, anchor = SE)
+        self.app_img = Image.open("Images/App name.png")
+        self.app_img = ImageTk.PhotoImage(self.app_img)
+        self.app = tkinter.Label(image = self.app_img, borderwidth = 0)
+        self.app.place(x = 390, y = 105)
+
+        self.loggedin = tkinter.Label(text = f"Logged in as {self.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
 
 
     def CreatingAccount(self):
         if self.passwordwidget.get() != self.confirm_passwordwidget.get():
-            self.different_passwords = tkinter.Label(text = "Please enter the password entered earlier : ", fg = "red").place(x = 310, y = 400)
+            self.different_passwords = tkinter.Label(text = "Please enter the password entered earlier : ", fg = "red", background = WINDOWBG2).place(x = 310, y = 340)
         else:
             f=open("logindetails.json","r+")
             contents = f.read()
@@ -459,65 +519,70 @@ class Home:
         for i in range(len(js)):
             if js[i]['username'] == self.username:
                 if js[i]['password'] == self.password:
-                    # print("Login Successful")
                     self.email = True
                     self.MainMenu()
                 else:
-                    self.incorrectpassword = tkinter.Label(text = "Incorrect Password", borderwidth = 0, bg = "white", fg = "red")
-                    self.incorrectpassword.place(x = 340, y = 298)
+                    self.incorrectpassword = tkinter.Label(text = "Incorrect Password", borderwidth = 0, background = WINDOWBG2, fg = "red")
+                    self.incorrectpassword.place(x = 325, y = 275)
                     break
             else:
                 self.email = False  
         if self.email is False:
-            self.incorrectemail = tkinter.Label(text = "Email does not exist, try to Sign Up",  borderwidth = 0, bg = "white", fg = "red").place(x = 110, y = 230)
+            self.incorrectemail = tkinter.Label(text = "Email does not exist, try to Sign Up",  borderwidth = 0, background = WINDOWBG2, fg = "red").place(x = 110, y = 230)
             self.usernamewidget.config(fg = "red")
         f.close()
 
-        # Need to create a button for Forgot Password
-
     def Password_Confirmation(self):
-        # self.wait = tkinter.Label(text = "Please wait, you'll be redirected shortly").place(x = 262, y = 200)
-        # time.sleep(5)
         if self.password != self.verificationwidget.get(1.0, END).strip():
             self.verificationwidget.config(font = ("red"))
-            self.incorrectid = tkinter.Label(text = "Incorrect Authentication id", font = ("TimesNewRoman"), fg = "red").place(x = 310, y = 360)
+            self.incorrectid = tkinter.Label(text = "Incorrect Authentication id", fg = "red", background = WINDOWBG2).place(x = 310, y = 330)
         else:
+            self.userdetails_img = Image.open("Images/SignupPage 2.png")
+            self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
+            self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
+            self.user.place(x = 262, y = 100)
+            self.passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*", background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+            self.passwordwidget.place(x = 310, y  = 200)
+            self.state_check = tkinter.IntVar()
+            self.show_password = tkinter.Checkbutton(variable = self.state_check, text = "Show Password :", command = self.DisplayPassword, background = "#B2FFFF")
+            self.show_password.place(x = 310, y = 230)
+            self.confirm_passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*", background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+            self.confirm_passwordwidget.place(x = 310, y  = 300)           
+            self.next3 = tkinter.Button(image = self.next_img, borderwidth = 0, command = self.CreatingAccount, background = "#B2FFFF")
+            self.next3.place(x = 590, y = 275)
+
+    def Submit_NewUser(self):
+        def check_mail(input_username):
+            if(re.search(regex,input_username)):   
+                return True   
+            else:   
+                return False
+        self.isvalid = check_mail(self.usernamewidget.get(1.0, END).strip())
+        if self.isvalid:
+            self.homebutton.destroy()
+            app.destroy(); login_button.destroy()
+            self.username = self.usernamewidget.get(1.0, END).strip()
+            self.lower=string.ascii_lowercase
+            self.upper=string.ascii_uppercase
+            self.num=string.digits
+            all = self.lower + self.upper + self.num   
+            temp=random.sample(all,5)
+            self.password="".join(temp)
             self.userdetails_img = Image.open("Images/SignupPage 3.png")
             self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
             self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
             self.user.place(x = 262, y = 100)
-            self.passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*")
-            self.passwordwidget.place(x = 310, y  = 200)
-            self.state_check = tkinter.IntVar()
-            self.show_password = tkinter.Checkbutton(variable = self.state_check, text = "Show Password :", command = self.DisplayPassword)
-            self.show_password.place(x = 310, y = 230)
-            self.confirm_passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*")
-            self.confirm_passwordwidget.place(x = 310, y  = 330)           
-            self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = on_home.CreatingAccount)
-            self.next.place(x = 580, y = 340)
+            self.verificationwidget = tkinter.Text(height = 1, width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+            self.verificationwidget.place(x = 310, y  = 270)
+            self.next2 = tkinter.Button(image = self.next_img, borderwidth = 0, command = self.Password_Confirmation, background = "#B2FFFF")
+            self.next2.place(x = 590, y = 235)
+            with smtplib.SMTP("smtp.gmail.com") as server:
+                server.starttls()
+                server.login('testproject194@gmail.com', 'testproject!@#$')
+                server.sendmail(from_addr = 'testproject194@gmail.com', to_addrs = self.username, msg = f"Subject : Authentication Code\n\nAuthentication Code is {self.password}")
+        else:
+            self.notvalid = tkinter.Label(text = "Not a Valid Email id", fg = "red", background = "#B2FFFF").place(x = 310, y = 260)
 
-    def Submit_NewUser(self):
-        self.homebutton.destroy()
-        app.destroy(); login_button.destroy()
-        self.username = self.usernamewidget.get(1.0, END).strip()
-        self.lower=string.ascii_lowercase
-        self.upper=string.ascii_uppercase
-        self.num=string.digits
-        all = self.lower + self.upper + self.num   #+ symbols
-        temp=random.sample(all,5)
-        self.password="".join(temp)
-        self.userdetails_img = Image.open("Images/SignupPage 2.png")
-        self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
-        self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
-        self.user.place(x = 262, y = 100)
-        self.verificationwidget = tkinter.Text(height = 1, width = 25, font = ("Consolas",14,"bold"), borderwidth = 0)
-        self.verificationwidget.place(x = 310, y  = 270)
-        self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = on_home.Password_Confirmation)
-        self.next.place(x = 580, y = 330)
-        with smtplib.SMTP("smtp.gmail.com") as server:
-            server.starttls()
-            server.login('testproject194@gmail.com', 'testproject!@#$')
-            server.sendmail(from_addr = 'testproject194@gmail.com', to_addrs = self.username, msg = f"Subject : Authentication Code\n\nAuthentication Code is {self.password}")
 
     def Submit_Login(self):
         self.username = self.usernamewidget.get(1.0, END).strip()
@@ -531,36 +596,39 @@ class Home:
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 262, y = 100)
-        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0)
+        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
         self.usernamewidget.place(x = 310, y  = 200)
-        self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = self.Submit_NewUser)
-        self.next.place(x = 580, y = 330)
-        self.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
+        self.next1 = tkinter.Button(image = self.next_img, borderwidth = 0, command = self.Submit_NewUser, background = "#B2FFFF")
+        self.next1.place(x = 590, y = 235)
+        self.home_img = Image.open("Images/Home.png")
+        self.home_img = ImageTk.PhotoImage(self.home_img)
+        self.homebutton = tkinter.Button(image = self.home_img, command = on_home.HomePage, background = WINDOWBG2,borderwidth = 0)
         self.homebutton.pack(side = TOP, anchor = NE)
 
 
     def Clicked_Login(self):
         self.homebutton.destroy()
         app.destroy(); signin_button.destroy()
-        self.userdetails_img = Image.open("Images/User.png")
+        self.userdetails_img = Image.open("Images/UserDetails.png")
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 60, y = 100)
-        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0)
+        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
         self.usernamewidget.place(x = 110, y  = 200)
-        self.passwordwidget = tkinter.Entry(width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*")
-        self.passwordwidget.place(x = 110, y  = 310)
+        self.passwordwidget = tkinter.Entry(width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*",background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+        self.passwordwidget.place(x = 110, y  = 295)
         self.state_check = tkinter.IntVar()
-        self.show_password = tkinter.Checkbutton(variable = self.state_check, text = "Show Password :", command = self.DisplayPassword)
+        self.show_password = tkinter.Checkbutton(variable = self.state_check, text = "Show Password :", command = self.DisplayPassword,background = "#B2FFFF")
         self.show_password.place(x = 110, y = 340)
-        self.next = tkinter.Button(text = "Next", font = (20), borderwidth = 0, command = self.Submit_Login)
-        self.next.place(x = 390, y = 340)
-        self.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
+        self.next = tkinter.Button(image = self.next_img, borderwidth = 0, command = self.Submit_Login, background = "#B2FFFF")
+        self.next.place(x = 389, y = 235)
+        self.home_img = Image.open("Images/Home.png")
+        self.home_img = ImageTk.PhotoImage(self.home_img)
+        self.homebutton = tkinter.Button(image = self.home_img, command = on_home.HomePage, background = WINDOWBG2, borderwidth = 0)
         self.homebutton.pack(side = TOP, anchor = NE)
 
 on_home = Home()
 
-on_home.canvas.place(x = 0, y = 0)
 
 signin_img = Image.open("Images/SignUp.png")
 signin_img = ImageTk.PhotoImage(signin_img)
@@ -577,10 +645,9 @@ login_img = ImageTk.PhotoImage(login_img)
 login_button = tkinter.Button(image = login_img, borderwidth = 0, command = on_home.Clicked_Login)
 login_button.place(x = 462, y = 100)
 
-on_home.homebutton = tkinter.Button(text = "Go to home", command = on_home.HomePage)
+home_img = Image.open("Images/Home.png")
+home_img = ImageTk.PhotoImage(home_img)
+on_home.homebutton = tkinter.Button(image = home_img, command = on_home.HomePage)
 
-# window.bind("<Motion>", lambda event : print(event.x, event.y))
 
 window.mainloop()
-
-
