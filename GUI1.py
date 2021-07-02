@@ -23,7 +23,7 @@ ws = window.winfo_screenwidth()
 hs = window.winfo_screenheight() 
 x = (ws/2) - (w/2)
 y = (hs/2) - (h/2)
-window.title("Unified Form Manager")
+window.title("Sortle")
 window.minsize(height = h, width = w)
 window.geometry('%dx%d+%d+%d' % (w, h, x, y))
 window.config(background = WINDOWBG2)
@@ -46,6 +46,7 @@ def Form_Sorting():
             self.finalmsg = tkinter.Label()
             self.dropdown = tkinter.Label()
             self.helpbutton = tkinter.Button()
+            self.Fields_available = tkinter.Listbox()
 
         def Fields_Received(self):
             self.fields_fromuser = self.custom_choice.get(1.0, END)
@@ -124,6 +125,7 @@ def Form_Sorting():
 
         def browse_file(self):
             # Remove()
+            self.Fields_available.destroy()
             setattr(fields,'name',filedialog.askopenfilename(filetypes = (("All files", "*"), ("Excel Files", "*.xlsx"))))
             wb = openpyxl.load_workbook(fields.name)
             if file_name.get(1.0,END) != "":
@@ -233,7 +235,6 @@ def Form_Sorting():
             current.set(fields.notcreated[0])
             fields.dropdown = tkinter.OptionMenu(window, current, *fields.notcreated)
             fields.dropdown.place(x = 560, y = 450)
-
     
 def Send_Mails():
     Remove()
@@ -499,6 +500,122 @@ def Send_Mails():
     homebutton.pack(side = TOP, anchor = NE)
     loggedin = tkinter.Label(text = f"Logged in as {on_home.username}", background = WINDOWBG2).place(x = 470, y= 480)
 
+def Modify_Excel():
+    class ExcelModify:
+        def __init__(self):
+            self.refbutton = tkinter.Button()
+            self.ref_filename = tkinter.Text()
+            self.Fields_available = tkinter.Listbox()
+            self.name = "../"
+            self.n = 0
+
+        def ModifiedExcel(self):
+            self.wb2 = openpyxl.load_workbook(modify.name)
+            self.sheet2 = self.wb2.active
+            clen= self.sheet2.max_column
+            rlen = self.sheet2.max_row
+            text = ""
+            self.sheet2.cell(row = 1, column = clen + 1, value = f"{self.prompting_fieldname.get(1.0, END)}")
+            with open(self.referencename) as file:
+                content = file.readlines()
+            for i in range(2, rlen + 1):
+                text = self.sheet2.cell(row = i, column = self.column).value
+                for j in range(len(content)):
+                    if ((content[j].strip().split('-')[0])) == text:
+                        d = self.sheet2.cell(row = i, column = clen + 1)
+                        d.value = content[j].strip().split('-')[1]
+            self.wb2.save(self.name)
+            modify.finalmsg = tkinter.Label(text = "Process Complete", font = ("Consolas"), background = WINDOWBG2)
+            modify.finalmsg.place(x = 275, y = 450)
+
+        def Browse_Reference(self):
+            self.referencename = filedialog.askopenfilename(filetypes = (("Notepad Files", "*.txt"),("All files", "*")))
+            self.ref_filename = tkinter.Text(height = 1, width = 90, borderwidth = 0, font = ("Consolas",10,"bold"))
+            self.ref_filename.insert(END, f"{self.referencename}")
+            self.ref_filename.place(x = 200, y = 320)
+            self.enter_name = tkinter.Label(text = "Enter the field name, in which you wish to add details : ", background = WINDOWBG2).place(x = 200, y = 350)
+            self.prompting_fieldname = tkinter.Text(height = 1, width = 60, font = ("Consolas",10,"bold"), borderwidth = 0)
+            self.prompting_fieldname.place(x = 200, y = 375)
+            def RemoveHelp():
+                modify.help.destroy()
+            def button_clicked():
+                modify.n += 1
+                if(modify.n % 2 != 0):
+                    modify.help = tkinter.Text(height = 5, width = 34,background = WINDOWBG3, font = ("Consolas",7,"bold"), borderwidth = 0)
+                    modify.help.insert(END, "Ensure that the value being added and the field value with which it is being compared are separated by a '-'(no spaces)")
+                    modify.help.place(x = 220, y = 395)
+                    window.mainloop()
+                elif(modify.n % 2 == 0):
+                    RemoveHelp()
+
+            modify.helpimg = Image.open("Images/Help.png")
+            modify.helpimg = ImageTk.PhotoImage(modify.helpimg)
+            modify.helpbutton=tkinter.Button(image = modify.helpimg,command=button_clicked, borderwidth = 0, background = WINDOWBG2)
+            modify.helpbutton.place(x = 200, y = 395) 
+            self.submit_fieldname = tkinter.Button(text = "Submit", borderwidth = 0, command = self.ModifiedExcel)
+            self.submit_fieldname.place(x = 629, y = 374)
+
+            
+
+        def Field_Selected(self,event):
+            self.column = self.Sheet_Parameters[self.Fields_available.get(self.Fields_available.curselection())]
+            self.refbutton = tkinter.Button(text = "Choose a Reference File (.txt) format:",background = WINDOWBG2, command = modify.Browse_Reference, borderwidth = 0)
+            self.refbutton.place(x = 200, y = 290)
+
+        def Open_Drive(self):
+            chrome_driver_path = "C:/Chrome Driver/chromedriver"
+            driver = webdriver.Chrome(executable_path = chrome_driver_path)
+            driver.get("https://accounts.google.com/signin/v2/identifier?service=writely&sacu=1&rip=1&flowName=GlifWebSignIn&flowEntry=ServiceLogin")
+            login = driver.find_element_by_id("identifierId")
+            emailid = on_home.username
+            login.send_keys(emailid)
+            next_button = driver.find_element_by_xpath('//*[@id="identifierNext"]/div/button/span')
+            next_button.click()
+
+        def browse_file(self):
+            # Remove()
+            self.Fields_available.destroy()
+            setattr(modify,'name',filedialog.askopenfilename(filetypes = (("Excel Files", "*.xlsx"),("All files", "*"))))
+            self.wb = openpyxl.load_workbook(modify.name)
+            if file_name.get(1.0,END) != "":
+                file_name.delete(1.0,END)
+            file_name.insert(END,f"{modify.name}")
+            self.sheet = self.wb.active 
+            self.Sheet_Parameters = {}
+            self.column = self.sheet.max_column
+            self.max_column = self.sheet.max_column
+            self.row = self.sheet.max_row
+            for i in range(1, self.column + 1):
+                self.Sheet_Parameters[self.sheet.cell(row = 1, column = i).value] = i
+            self.wb.close()
+            label = tkinter.Label(text = "The following fields have been identified.\nChoose which field you wish to compare with : ", background = WINDOWBG2).place(x = 40, y = 242)
+            self.Fields_available = tkinter.Listbox(height = len(self.Sheet_Parameters), borderwidth=0, font = ("Consolas",10,"bold"))
+            for key, value in self.Sheet_Parameters.items():
+                self.Fields_available.insert(value, key)
+                self.Fields_available.bind("<<ListboxSelect>>",modify.Field_Selected)
+                self.Fields_available.place(x = 40, y = 290)
+    
+    modify = ExcelModify()
+    Remove()
+    modify.browse_img = Image.open("Images/Browse.png").resize((150,150))
+    modify.browse_img = ImageTk.PhotoImage(modify.browse_img)
+    modify.browse_Button = tkinter.Button(image = modify.browse_img, command = modify.browse_file, borderwidth = 0, background = WINDOWBG2)
+    modify.browse_Button.place(x = 175, y = 40)
+    browselabel = tkinter.Label(text = "Browse Excel Files", background = WINDOWBG2).place(x = 200, y = 175)
+    modify.drive_img = Image.open("Images/GDrive.png").resize((150,150))
+    modify.drive_img = ImageTk.PhotoImage(modify.drive_img)
+    modify.download_Button = tkinter.Button(image = modify.drive_img, command = modify.Open_Drive,borderwidth = 0, background = WINDOWBG2)
+    modify.download_Button.place(x = 350, y = 40)
+    drivelabel = tkinter.Label(text = "Download From Drive", background = WINDOWBG2).place(x = 360, y = 175)
+    openfile_label = tkinter.Label(text = "File Opened : ", background = WINDOWBG2).place(x = 125, y = 202)
+    file_name = tkinter.Text(height = 1, width = 80, font = ("Consolas",8,"bold"), borderwidth = 0)
+    file_name.place(x = 210, y = 205)
+    modify.home_img = Image.open("Images/Home.png")
+    modify.home_img = ImageTk.PhotoImage(modify.home_img)
+    homebutton = tkinter.Button(image = modify.home_img, command = on_home.MainMenu, background = WINDOWBG2, borderwidth = 0)
+    homebutton.pack(side = TOP, anchor = NE)
+    loggedin = tkinter.Label(text = f"Logged in as {on_home.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
+
 class Home:
 
     def __init__(self):
@@ -536,16 +653,21 @@ class Home:
         self.sort_buttonimg = Image.open("Images/Excel_Icon.png").resize((125, 125))
         self.sort_buttonimg = ImageTk.PhotoImage(self.sort_buttonimg)
         self.sort_button = tkinter.Button(image = self.sort_buttonimg, borderwidth = 0, command = Form_Sorting,background = WINDOWBG2).place(x = 90, y = 90)
-        self.sort_dimg = Image.open("Images/Sorting Description.png")
-        self.sort_dimg = ImageTk.PhotoImage(self.sort_dimg)
-        self.sort_description = tkinter.Label(image = self.sort_dimg, borderwidth = 0).place(x = 220, y = 8)
+        # self.sort_dimg = Image.open("Images/Sorting Description.png")
+        # self.sort_dimg = ImageTk.PhotoImage(self.sort_dimg)
+        # self.sort_description = tkinter.Label(image = self.sort_dimg, borderwidth = 0).place(x = 220, y = 8)
 
         self.mail_buttonimg = Image.open("Images/Email.png").resize((125, 125))
         self.mail_buttonimg = ImageTk.PhotoImage(self.mail_buttonimg)
         self.mail_button = tkinter.Button(image = self.mail_buttonimg, borderwidth = 0, command = Send_Mails,background = WINDOWBG2).place(x = 100, y = 280)
-        self.mimg = Image.open("Images/Mailing Description.png")
-        self.mimg = ImageTk.PhotoImage(self.mimg)
-        self.mail_description = tkinter.Label(image = self.mimg, borderwidth = 0).place(x = 220, y = 220)
+        # self.mimg = Image.open("Images/Mailing Description.png")
+        # self.mimg = ImageTk.PhotoImage(self.mimg)
+        # self.mail_description = tkinter.Label(image = self.mimg, borderwidth = 0).place(x = 220, y = 220)
+
+        self.modify_buttonimg = Image.open("Images/ModifyExcelicon.png").resize((125, 125))
+        self.modify_buttonimg = ImageTk.PhotoImage(self.modify_buttonimg)
+        self.modify_button = tkinter.Button(image = self.modify_buttonimg, borderwidth = 0, command = Modify_Excel,background = WINDOWBG2).place(x = 300, y = 185)
+
 
         self.loggedin = tkinter.Label(text = f"Logged in as {self.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
 
