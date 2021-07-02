@@ -346,9 +346,6 @@ def Send_Mails():
             displaying_fields.insert(END, u'\u2022 {}\n'.format(name))
     
     def Write_Mails():
-        notsent = []
-        # wait_label = tkinter.Label(text = "Please wait...", background = WINDOWBG2)
-        # wait_label.place(x = 200, y = 468)
         wb = openpyxl.load_workbook(mails.file_path)
         sheet = wb.active
         email_message = mail_body.get(1.0, END)
@@ -365,21 +362,27 @@ def Send_Mails():
             connection.starttls()
             connection.login(user = from_address.get(1.0, END).strip(), password = gmail_password.get().strip())
             for i in range(2, sheet.max_row + 1):
-                mails.msg = EmailMessage()
                 if mails.state.get():
+                    mails.msg = EmailMessage()
                     with open(f"{mails.attachment_path}", "rb") as file:
                         data = file.read()
-                    attachedfile_name = os.path.basename(mails.attachment_path)
-                    mails.msg.add_attachment(data, maintype = "application", subtype = "octet-stream", filename = attachedfile_name)
-                mails.msg["From"] =  from_address.get(1.0, END).strip()
-                mails.msg["Subject"] = subject.get(1.0,END).strip()
-                unique_messages = email_message
-                for field_name, column_number in mailbody_check.items():
-                    unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
-                mails.msg["To"] = sheet.cell(row = i, column = mailbody_check["emailid"]).value
-                mails.msg.attach(MIMEText(unique_messages,'plain'))
-                connection.send_message(mails.msg)
-                del mails.msg["To"]
+                        attachedfile_name = os.path.basename(mails.attachment_path)
+                        mails.msg.add_attachment(data, maintype = "application", subtype = "octet-stream", filename = attachedfile_name)
+                    mails.msg["From"] =  from_address.get(1.0, END).strip()
+                    mails.msg["Subject"] = subject.get(1.0,END).strip()
+                    unique_messages = email_message
+                    for field_name, column_number in mailbody_check.items():
+                        unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
+                    mails.msg["To"] = sheet.cell(row = i, column = mailbody_check["emailid"]).value
+                    mails.msg.attach(MIMEText(unique_messages,'plain'))
+                    connection.send_message(mails.msg)
+                    del mails.msg["To"]
+                else:#app was crashing, don't understand why...
+                    unique_messages = email_message
+                    for field_name, column_number in mailbody_check.items():
+                        unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
+                    connection.sendmail(from_addr = from_address.get(1.0, END).strip(), to_addrs = sheet.cell(row = i, column = mailbody_check["emailid"]).value,msg = f"Subject : {subject.get(1.0,END).strip()}\n\n{unique_messages}")
+                    
             completed_label = tkinter.Label(text = "Process Complete",font = ("Consolas"), background = WINDOWBG2)
             completed_label.place(x = 200, y = 165)
 
@@ -475,18 +478,22 @@ class Home:
         on_home.homebutton.destroy()
         self.sort_buttonimg = Image.open("Images/Excel_Icon.png").resize((125, 125))
         self.sort_buttonimg = ImageTk.PhotoImage(self.sort_buttonimg)
-        self.sort_button = tkinter.Button(image = self.sort_buttonimg, borderwidth = 0, command = Form_Sorting,background = WINDOWBG2).place(x = 90, y = 100)
-        self.sort_buttonlabel = tkinter.Label(text = "Sort Forms",background = WINDOWBG2).place(x = 135, y = 230)
+        self.sort_button = tkinter.Button(image = self.sort_buttonimg, borderwidth = 0, command = Form_Sorting,background = WINDOWBG2).place(x = 90, y = 90)
+        self.sort_dimg = Image.open("Images/Sorting Description.png")
+        self.sort_dimg = ImageTk.PhotoImage(self.sort_dimg)
+        self.sort_description = tkinter.Label(image = self.sort_dimg, borderwidth = 0).place(x = 220, y = 8)
 
         self.mail_buttonimg = Image.open("Images/Email.png").resize((125, 125))
         self.mail_buttonimg = ImageTk.PhotoImage(self.mail_buttonimg)
         self.mail_button = tkinter.Button(image = self.mail_buttonimg, borderwidth = 0, command = Send_Mails,background = WINDOWBG2).place(x = 100, y = 280)
-        self.mail_buttonlabel = tkinter.Label(text = "Send Mails", background = WINDOWBG2).place(x = 135, y = 400)
+        self.mimg = Image.open("Images/Mailing Description.png")
+        self.mimg = ImageTk.PhotoImage(self.mimg)
+        self.mail_description = tkinter.Label(image = self.mimg, borderwidth = 0).place(x = 220, y = 220)
 
-        self.app_img = Image.open("Images/App name.png")
-        self.app_img = ImageTk.PhotoImage(self.app_img)
-        self.app = tkinter.Label(image = self.app_img, borderwidth = 0)
-        self.app.place(x = 390, y = 105)
+        # self.app_img = Image.open("Images/App name.png")
+        # self.app_img = ImageTk.PhotoImage(self.app_img)
+        # self.app = tkinter.Label(image = self.app_img, borderwidth = 0)
+        # self.app.place(x = 390, y = 105)
 
         self.loggedin = tkinter.Label(text = f"Logged in as {self.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
 

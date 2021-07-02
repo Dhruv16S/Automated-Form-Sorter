@@ -34,8 +34,3 @@
 #     tkinter.Entry(width = 10, background = colour).grid(row = colours.index(colour), column = 1)
 # window.bind("<Motion>", lambda event : print(event.x, event.y))
 # # window.mainloop()
-
-list = ['A','B\n']
-for i in list:
-    b = i.strip()
-    print(b)
