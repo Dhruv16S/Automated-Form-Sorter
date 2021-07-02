@@ -45,6 +45,7 @@ def Form_Sorting():
             self.notcreated = []
             self.finalmsg = tkinter.Label()
             self.dropdown = tkinter.Label()
+            self.helpbutton = tkinter.Button()
 
         def Fields_Received(self):
             self.fields_fromuser = self.custom_choice.get(1.0, END)
@@ -54,11 +55,13 @@ def Form_Sorting():
             if self.radio_state.get() == 1:
                 self.finalmsg.destroy()
                 self.dropdown.destroy()
+                self.helpbutton.destroy()
                 if self.custom_choice.winfo_ismapped():
                     self.custom_choice.destroy()
                     self.submit_choices.destroy()
                 Creating_Files(self.column)
             elif self.radio_state.get() == 2:
+                self.finalmsg.destroy()
                 def RemoveHelp():
                     fields.help.destroy()
                 def button_clicked():
@@ -73,8 +76,8 @@ def Form_Sorting():
 
                 fields.helpimg = Image.open("Images/Help.png")
                 fields.helpimg = ImageTk.PhotoImage(fields.helpimg)
-                helpbutton=tkinter.Button(image = fields.helpimg,command=button_clicked, borderwidth = 0, background = WINDOWBG2)
-                helpbutton.place(x = 168, y = 450)
+                fields.helpbutton=tkinter.Button(image = fields.helpimg,command=button_clicked, borderwidth = 0, background = WINDOWBG2)
+                fields.helpbutton.place(x = 168, y = 450)
 
                 self.custom_choice = tkinter.Text(width = 30, height = 1, font = ("Consolas",12,"bold"), borderwidth = 0)
                 self.custom_choice.place(in_ = self.Fields_available, relx = 1.0, x = 5, y = 140)
@@ -162,6 +165,8 @@ def Form_Sorting():
     homebutton.pack(side = TOP, anchor = NE)
     loggedin = tkinter.Label(text = f"Logged in as {on_home.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
     def Creating_Files(operating_column):
+        fields.finalmsg.destroy()
+        fields.dropdown.destroy()
         if fields.radio_state.get() == 1:
             for i in range(2, fields.row + 1):    
                 choices_opted = str(fields.sheet.cell(i, operating_column).value).split(",")      
@@ -246,6 +251,18 @@ def Send_Mails():
             self.visitedprevious = False
             self.attachment_path = "../"
             self.n = 0
+            self.completed_label = tkinter.Label()
+            self.wrong_password = tkinter.Label()
+            self.notfilled = ["var"]
+            self.subject = tkinter.Text()
+            self.mail_body = tkinter.Text()
+            self.yesorno = tkinter.IntVar()
+            self.confirmation = tkinter.Label()
+            self.yes_radio = tkinter.Radiobutton()
+            self.no_radio = tkinter.Radiobutton()
+            self.fieldsnotfilled = tkinter.StringVar()
+            self.fieldsnotfilled = self.notfilled[0]
+            self.field_options = tkinter.OptionMenu(window, self.fieldsnotfilled, *self.notfilled)
 
         def BrowseAttachments(self):
             self.attachment_path = filedialog.askopenfilename(filetypes = (("All files", "*"), ("Template files", "*.type")))
@@ -296,6 +313,12 @@ def Send_Mails():
                 
 
         def PreviousPage(self):
+            mails.confirmation.destroy()
+            mails.yes_radio.destroy()
+            mails.no_radio.destroy()
+            mails.field_options.destroy()
+            mails.wrong_password.destroy()
+            mails.completed_label.destroy()
             if not self.visitedprevious:
                 self.positions2 = {}
                 self.widgets2 = window.winfo_children()
@@ -344,11 +367,11 @@ def Send_Mails():
             displaying_fields.delete(1.0, END)
         for name in mails.fields_available:
             displaying_fields.insert(END, u'\u2022 {}\n'.format(name))
-    
-    def Write_Mails():
+
+    def Write_Mails_Final():
         wb = openpyxl.load_workbook(mails.file_path)
         sheet = wb.active
-        email_message = mail_body.get(1.0, END)
+        email_message = mails.mail_body.get(1.0, END)
         addresses = to_address.get(1.0, END)
         mailbody_check = {}
         for i in range(1, sheet.max_column + 1):
@@ -360,34 +383,68 @@ def Send_Mails():
           #non jpeg, jpg, png files only
         with smtplib.SMTP("smtp.gmail.com") as connection:
             connection.starttls()
-            connection.login(user = from_address.get(1.0, END).strip(), password = gmail_password.get().strip())
-            for i in range(2, sheet.max_row + 1):
-                if mails.state.get():
-                    mails.msg = EmailMessage()
-                    with open(f"{mails.attachment_path}", "rb") as file:
-                        data = file.read()
-                        attachedfile_name = os.path.basename(mails.attachment_path)
-                        mails.msg.add_attachment(data, maintype = "application", subtype = "octet-stream", filename = attachedfile_name)
-                    mails.msg["From"] =  from_address.get(1.0, END).strip()
-                    mails.msg["Subject"] = subject.get(1.0,END).strip()
-                    unique_messages = email_message
-                    for field_name, column_number in mailbody_check.items():
-                        unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
-                    mails.msg["To"] = sheet.cell(row = i, column = mailbody_check["emailid"]).value
-                    mails.msg.attach(MIMEText(unique_messages,'plain'))
-                    connection.send_message(mails.msg)
-                    del mails.msg["To"]
-                else:#app was crashing, don't understand why...
-                    unique_messages = email_message
-                    for field_name, column_number in mailbody_check.items():
-                        unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
-                    connection.sendmail(from_addr = from_address.get(1.0, END).strip(), to_addrs = sheet.cell(row = i, column = mailbody_check["emailid"]).value,msg = f"Subject : {subject.get(1.0,END).strip()}\n\n{unique_messages}")
-                    
-            completed_label = tkinter.Label(text = "Process Complete",font = ("Consolas"), background = WINDOWBG2)
-            completed_label.place(x = 200, y = 165)
+            try:
+                connection.login(user = from_address.get(1.0, END).strip(), password = gmail_password.get().strip())
+            except:
+                mails.wrong_password = tkinter.Label(text = "Incorrect Gmail Password",fg = "red",font = ("Consolas"), background = WINDOWBG2)
+                mails.wrong_password.place(x = 200, y = 165)
+            else:
+                for i in range(2, sheet.max_row + 1):
+                    if mails.state.get():
+                        mails.msg = EmailMessage()
+                        with open(f"{mails.attachment_path}", "rb") as file:
+                            data = file.read()
+                            attachedfile_name = os.path.basename(mails.attachment_path)
+                            mails.msg.add_attachment(data, maintype = "application", subtype = "octet-stream", filename = attachedfile_name)
+                        mails.msg["From"] =  from_address.get(1.0, END).strip()
+                        mails.msg["Subject"] = mails.subject.get(1.0,END).strip()
+                        unique_messages = email_message
+                        for field_name, column_number in mailbody_check.items():
+                            unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
+                        mails.msg["To"] = sheet.cell(row = i, column = mailbody_check["emailid"]).value
+                        mails.msg.attach(MIMEText(unique_messages,'plain'))
+                        connection.send_message(mails.msg)
+                        del mails.msg["To"]
+                    else:#app was crashing, don't understand why...
+                        unique_messages = email_message
+                        for field_name, column_number in mailbody_check.items():
+                            unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
+                        connection.sendmail(from_addr = from_address.get(1.0, END).strip(), to_addrs = sheet.cell(row = i, column = mailbody_check["emailid"]).value,msg = f"Subject : {mails.subject.get(1.0,END).strip()}\n\n{unique_messages}")
+                        
+                mails.completed_label = tkinter.Label(text = "Process Complete",font = ("Consolas"), background = WINDOWBG2)
+                mails.completed_label.place(x = 200, y = 165)
 
-
+    def ConfirmingMails():
+        if mails.yesorno.get():
+            mails.confirmation.destroy()
+            mails.yes_radio.destroy()
+            mails.no_radio.destroy()
+            mails.field_options.destroy()
+            Write_Mails_Final()
+        else:
+            return
     
+    def Write_Mails():
+        mails.notfilled = []
+        if mails.subject.get(1.0,END).strip() == "" or mails.mail_body.get(1.0, END).strip() == "":
+            if mails.subject.get(1.0,END).strip() == "":
+                mails.notfilled.append("Subject")
+            if mails.mail_body.get(1.0, END).strip() == "":
+                mails.notfilled.append("Body of the mail")
+        if len(mails.notfilled) != 0:
+            mails.confirmation = tkinter.Label(text = "Wish to mail without the following fields? : ",background = WINDOWBG2)
+            mails.confirmation.place(x = 50, y = 275)
+            mails.fieldsnotfilled = tkinter.StringVar()
+            mails.fieldsnotfilled.set(mails.notfilled[0])
+            mails.field_options = tkinter.OptionMenu(window, mails.fieldsnotfilled, *mails.notfilled)
+            mails.field_options.place(x = 295, y = 272)
+            mails.yesorno = tkinter.IntVar()
+            mails.yes_radio = tkinter.Radiobutton(text = "Yes",value = 1, variable = mails.yesorno,background=WINDOWBG2, command = ConfirmingMails)
+            mails.yes_radio.place(x = 50,y = 300)
+            mails.no_radio = tkinter.Radiobutton(text = "No",value = 0, variable = mails.yesorno,background=WINDOWBG2, command = ConfirmingMails)
+            mails.no_radio.place(x = 100,y = 300)
+        else:
+            Write_Mails_Final()
     browsed_file = tkinter.Button(text = "Browse Files : ", borderwidth = 0, command = Browse_File, background = WINDOWBG2)
     browsed_file.place(x = 50, y = 100)
     mails.nextpage_img = Image.open("Images/NextPage.png")
@@ -400,8 +457,8 @@ def Send_Mails():
     displaying_fields = tkinter.Text(height = 5, width = 35, font = ("Consolas",10,"bold"), borderwidth = 0)
     displaying_fields.place(x = 50, y = 150)
     subject_label = tkinter.Label(text = "Subject : ", background = WINDOWBG2).place(x = 50, y = 245)
-    subject = tkinter.Text(height = 1, width = 45, font = ("Consolas",12,"bold"), borderwidth = 0)
-    subject.place(x = 115, y = 244)
+    mails.subject = tkinter.Text(height = 1, width = 45, font = ("Consolas",12,"bold"), borderwidth = 0)
+    mails.subject.place(x = 115, y = 244)
     fromaddress_label = tkinter.Label(text = "From : ", background = WINDOWBG2).place(x = 300, y = 160)
     from_address = tkinter.Text(height = 1, width = 28, font = ("Consolas",10,"bold"), borderwidth = 0)
     from_address.insert(END, f"{on_home.username}")
@@ -418,8 +475,8 @@ def Send_Mails():
     to_address.place(x = 350, y = 210)
     enter_body = tkinter.Label(text = "Enter the body of the email : ", background = WINDOWBG2)
     enter_body.place(x = 50, y = 275)
-    mail_body = tkinter.Text(height = 7, width = 75, font = ("Consolas",11,"bold"), borderwidth = 0)
-    mail_body.place(x = 50, y = 295)
+    mails.mail_body = tkinter.Text(height = 7, width = 75, font = ("Consolas",11,"bold"), borderwidth = 0)
+    mails.mail_body.place(x = 50, y = 295)
     def RemoveHelp():
         mails.help.destroy()
     def button_clicked():
@@ -489,11 +546,6 @@ class Home:
         self.mimg = Image.open("Images/Mailing Description.png")
         self.mimg = ImageTk.PhotoImage(self.mimg)
         self.mail_description = tkinter.Label(image = self.mimg, borderwidth = 0).place(x = 220, y = 220)
-
-        # self.app_img = Image.open("Images/App name.png")
-        # self.app_img = ImageTk.PhotoImage(self.app_img)
-        # self.app = tkinter.Label(image = self.app_img, borderwidth = 0)
-        # self.app.place(x = 390, y = 105)
 
         self.loggedin = tkinter.Label(text = f"Logged in as {self.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
 

@@ -1,0 +1,8 @@
+if gmail password is incorrect - main
+if some fields aren't filled
+if to address is not mentioned - main
+need to place back
+click submit - the prvious should get deleted in form sorting
+
+283
+390,275

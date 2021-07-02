@@ -34,3 +34,19 @@
 #     tkinter.Entry(width = 10, background = colour).grid(row = colours.index(colour), column = 1)
 # window.bind("<Motion>", lambda event : print(event.x, event.y))
 # # window.mainloop()
+import tkinter as tk
+
+
+    
+
+root = tk.Tk()
+
+text = tk.Text(root)
+img = tk.PhotoImage(file = "App name.gif")
+text.pack(padx = 20, pady = 20)
+text.image_create(tk.END, image = img) # Example 1
+
+
+
+
+root.mainloop()
