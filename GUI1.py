@@ -292,9 +292,15 @@ def Send_Mails():
                     self.positions[item] = [item.winfo_x(), item.winfo_y()]
                 self.visitednextpage = True
             for item in self.widgets:
-                item.place_forget()
+                try :
+                    item.place_forget()
+                except:
+                    pass
             for item in self.widgets2:
-                item.place(x = self.positions2[item][0], y = self.positions2[item][1])
+                try:
+                    item.place(x = self.positions2[item][0], y = self.positions2[item][1])
+                except:
+                    pass
             if self.createpage2:
                 loggedin = tkinter.Label(text = f"Logged in as {on_home.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
                 self.state = tkinter.IntVar()
@@ -314,12 +320,6 @@ def Send_Mails():
                 
 
         def PreviousPage(self):
-            mails.confirmation.destroy()
-            mails.yes_radio.destroy()
-            mails.no_radio.destroy()
-            mails.field_options.destroy()
-            mails.wrong_password.destroy()
-            mails.completed_label.destroy()
             if not self.visitedprevious:
                 self.positions2 = {}
                 self.widgets2 = window.winfo_children()
@@ -334,7 +334,16 @@ def Send_Mails():
                     self.widgets2 = list(set(self.widgets2).union(set(self.widgets)) - set(self.widgets2).intersection(set(self.widgets)))
                 self.visitedprevious = True
             for items in self.widgets2:
+                try:
                     items.place_forget()
+                except:
+                    pass
+            mails.confirmation.destroy()
+            mails.yes_radio.destroy()
+            mails.no_radio.destroy()
+            mails.field_options.destroy()
+            mails.wrong_password.destroy()
+            mails.completed_label.destroy()
             for item in self.widgets:
                 if self.positions[item][0] == self.positions[item][1] == 0:
                     continue
@@ -376,10 +385,10 @@ def Send_Mails():
         addresses = to_address.get(1.0, END)
         mailbody_check = {}
         for i in range(1, sheet.max_column + 1):
-            if email_message.find(f"<<{sheet.cell(1, i).value}>>") != -1:
-                mailbody_check[f"<<{sheet.cell(1, i).value}>>"] = i
+            if email_message.find(f"<<{sheet.cell(1, i).value.strip()}>>") != -1:
+                mailbody_check[f"<<{sheet.cell(1, i).value.strip()}>>"] = i
         for i in range(1, sheet.max_column + 1):
-            if addresses.find(f"<<{sheet.cell(1, i).value}>>") != -1:
+            if addresses.find(f"<<{sheet.cell(1, i).value.strip()}>>") != -1:
                 mailbody_check["emailid"] = i
           #non jpeg, jpg, png files only
         with smtplib.SMTP("smtp.gmail.com") as connection:
@@ -521,9 +530,9 @@ def Modify_Excel():
             for i in range(2, rlen + 1):
                 text = self.sheet2.cell(row = i, column = self.column).value
                 for j in range(len(content)):
-                    if ((content[j].strip().split('-')[0])) == text:
+                    if ((content[j].strip().split('-',2)[0])) == text:
                         d = self.sheet2.cell(row = i, column = clen + 1)
-                        d.value = content[j].strip().split('-')[1]
+                        d.value = content[j].strip().split('-',2)[1]
             self.wb2.save(self.name)
             modify.finalmsg = tkinter.Label(text = "Process Complete", font = ("Consolas"), background = WINDOWBG2)
             modify.finalmsg.place(x = 275, y = 450)
