@@ -530,9 +530,9 @@ def Modify_Excel():
             for i in range(2, rlen + 1):
                 text = self.sheet2.cell(row = i, column = self.column).value
                 for j in range(len(content)):
-                    if ((content[j].strip().split('-',2)[0])) == text:
+                    if ((content[j].strip().split('->',2)[0])) == text:
                         d = self.sheet2.cell(row = i, column = clen + 1)
-                        d.value = content[j].strip().split('-',2)[1]
+                        d.value = content[j].strip().split('->',2)[1]
             self.wb2.save(self.name)
             modify.finalmsg = tkinter.Label(text = "Process Complete", font = ("Consolas"), background = WINDOWBG2)
             modify.finalmsg.place(x = 275, y = 450)
@@ -551,7 +551,7 @@ def Modify_Excel():
                 modify.n += 1
                 if(modify.n % 2 != 0):
                     modify.help = tkinter.Text(height = 5, width = 34,background = WINDOWBG3, font = ("Consolas",7,"bold"), borderwidth = 0)
-                    modify.help.insert(END, "Ensure that the value being added and the field value with which it is being compared are separated by a '-'(no spaces)")
+                    modify.help.insert(END, "Ensure that the value being added and the field value with which it is being compared are separated by a '->'(no spaces)")
                     modify.help.place(x = 220, y = 395)
                     window.mainloop()
                 elif(modify.n % 2 == 0):
