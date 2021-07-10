@@ -1,17 +1,16 @@
+from tkinter import *
 
+top = Tk()
 
-# import re
-# string = '''
-# Mr. Schafer
-# Mrs. robinson
-# Mr Smith
-# Mrs Smith
-# Ms Davis
-# '''
-# print(re.findall(r'Mr?s?\.?[A-Z][a-zA-Z]+',string))
+B1 = Button(top, text ="FLAT", relief=FLAT )
+B2 = Button(top, text ="RAISED", relief=RAISED )
+B3 = Button(top, text ="SUNKEN", relief=SUNKEN )
+B4 = Button(top, text ="GROOVE", relief=GROOVE )
+B5 = Button(top, text ="RIDGE", relief=RIDGE )
 
-import re
-str1 = '''demonetization zuz craze zebra zaz bizua chip'''
-# str1 = " zaz "
-res = re.findall(r"[^Zz]\w+[Zz]+\w+[^Zz]",str1)
-print(res)
+B1.pack()
+B2.pack()
+B3.pack()
+B4.pack()
+B5.pack()
+top.mainloop()

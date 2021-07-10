@@ -1,5 +1,5 @@
 import tkinter
-from tkinter.constants import BOTTOM, E, END, LEFT, NE, NW, RIGHT, SE, TOP, Y
+from tkinter.constants import BOTTOM, E, END, GROOVE, LEFT, NE, NW, RAISED, RIGHT, SE, TOP, Y
 import openpyxl
 from tkinter import filedialog
 from PIL import Image, ImageTk
@@ -124,7 +124,6 @@ def Form_Sorting():
             next_button.click()
 
         def browse_file(self):
-            # Remove()
             self.Fields_available.destroy()
             setattr(fields,'name',filedialog.askopenfilename(filetypes = (("All files", "*"), ("Excel Files", "*.xlsx"))))
             wb = openpyxl.load_workbook(fields.name)
@@ -276,7 +275,7 @@ def Send_Mails():
                 self.browse_attachment = tkinter.Button(text = "Browse", borderwidth = 0, command = self.BrowseAttachments, background = WINDOWBG2)
                 self.browse_attachment.place(x = 55, y = 125)
                 self.attachment_name = tkinter.Text(height = 1, width = 75, font = ("Consolas",10,"bold"), borderwidth = 0)
-                self.attachment_name.place(x = 105, y = 127) #an issue while removing multiple times
+                self.attachment_name.place(x = 105, y = 127) 
             else:
                 self.browse_attachment.destroy()
                 self.attachment_name.destroy()           
@@ -390,7 +389,6 @@ def Send_Mails():
         for i in range(1, sheet.max_column + 1):
             if addresses.find(f"<<{sheet.cell(1, i).value.strip()}>>") != -1:
                 mailbody_check["emailid"] = i
-          #non jpeg, jpg, png files only
         with smtplib.SMTP("smtp.gmail.com") as connection:
             connection.starttls()
             try:
@@ -413,14 +411,19 @@ def Send_Mails():
                             unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
                         mails.msg["To"] = sheet.cell(row = i, column = mailbody_check["emailid"]).value
                         mails.msg.attach(MIMEText(unique_messages,'plain'))
-                        connection.send_message(mails.msg)
+                        try:
+                            connection.send_message(mails.msg)
+                        except:
+                            pass
                         del mails.msg["To"]
-                    else:#app was crashing, don't understand why...
+                    else:
                         unique_messages = email_message
                         for field_name, column_number in mailbody_check.items():
                             unique_messages = unique_messages.replace(str(field_name), str(sheet.cell(row = i, column = column_number).value))
-                        connection.sendmail(from_addr = from_address.get(1.0, END).strip(), to_addrs = sheet.cell(row = i, column = mailbody_check["emailid"]).value,msg = f"Subject : {mails.subject.get(1.0,END).strip()}\n\n{unique_messages}")
-                        
+                        try:
+                            connection.sendmail(from_addr = from_address.get(1.0, END).strip(), to_addrs = sheet.cell(row = i, column = mailbody_check["emailid"]).value,msg = f"Subject : {mails.subject.get(1.0,END).strip()}\n\n{unique_messages}")
+                        except:
+                            pass
                 mails.completed_label = tkinter.Label(text = "Process Complete",font = ("Consolas"), background = WINDOWBG2)
                 mails.completed_label.place(x = 200, y = 165)
 
@@ -572,6 +575,7 @@ def Modify_Excel():
             self.refbutton.place(x = 200, y = 290)
 
         def Open_Drive(self):
+            #insert your Chrome Driver path here
             chrome_driver_path = "C:/Chrome Driver/chromedriver"
             driver = webdriver.Chrome(executable_path = chrome_driver_path)
             driver.get("https://accounts.google.com/signin/v2/identifier?service=writely&sacu=1&rip=1&flowName=GlifWebSignIn&flowEntry=ServiceLogin")
@@ -582,7 +586,6 @@ def Modify_Excel():
             next_button.click()
 
         def browse_file(self):
-            # Remove()
             self.Fields_available.destroy()
             setattr(modify,'name',filedialog.askopenfilename(filetypes = (("Excel Files", "*.xlsx"),("All files", "*"))))
             self.wb = openpyxl.load_workbook(modify.name)
@@ -661,22 +664,24 @@ class Home:
         on_home.homebutton.destroy()
         self.sort_buttonimg = Image.open("Images/Excel_Icon.png").resize((125, 125))
         self.sort_buttonimg = ImageTk.PhotoImage(self.sort_buttonimg)
-        self.sort_button = tkinter.Button(image = self.sort_buttonimg, borderwidth = 0, command = Form_Sorting,background = WINDOWBG2).place(x = 90, y = 90)
-        # self.sort_dimg = Image.open("Images/Sorting Description.png")
-        # self.sort_dimg = ImageTk.PhotoImage(self.sort_dimg)
-        # self.sort_description = tkinter.Label(image = self.sort_dimg, borderwidth = 0).place(x = 220, y = 8)
+        self.sort_button = tkinter.Button(image = self.sort_buttonimg, borderwidth = 0, command = Form_Sorting,background = WINDOWBG2).place(x = 90, y = 41)
+        self.sort_dimg = Image.open("Images/Sorting Description.png").resize((250,125))
+        self.sort_dimg = ImageTk.PhotoImage(self.sort_dimg)
+        self.sort_description = tkinter.Label(image = self.sort_dimg, borderwidth = 0).place(x = 220, y = 43)
 
         self.mail_buttonimg = Image.open("Images/Email.png").resize((125, 125))
         self.mail_buttonimg = ImageTk.PhotoImage(self.mail_buttonimg)
-        self.mail_button = tkinter.Button(image = self.mail_buttonimg, borderwidth = 0, command = Send_Mails,background = WINDOWBG2).place(x = 100, y = 280)
-        # self.mimg = Image.open("Images/Mailing Description.png")
-        # self.mimg = ImageTk.PhotoImage(self.mimg)
-        # self.mail_description = tkinter.Label(image = self.mimg, borderwidth = 0).place(x = 220, y = 220)
+        self.mail_button = tkinter.Button(image = self.mail_buttonimg, borderwidth = 0, command = Send_Mails,background = WINDOWBG2).place(x = 90, y = 350)
+        self.mailimg = Image.open("Images/Mailing Description.png").resize((250,125))
+        self.mailimg = ImageTk.PhotoImage(self.mailimg)
+        self.mail_description = tkinter.Label(image = self.mailimg, borderwidth = 0).place(x = 208, y = 350)
 
         self.modify_buttonimg = Image.open("Images/ModifyExcelicon.png").resize((125, 125))
         self.modify_buttonimg = ImageTk.PhotoImage(self.modify_buttonimg)
-        self.modify_button = tkinter.Button(image = self.modify_buttonimg, borderwidth = 0, command = Modify_Excel,background = WINDOWBG2).place(x = 300, y = 185)
-
+        self.modify_button = tkinter.Button(image = self.modify_buttonimg, borderwidth = 0, command = Modify_Excel,background = WINDOWBG2).place(x = 90, y = 196)
+        self.mimg = Image.open("Images/Modifier Description.png").resize((250,125))
+        self.mimg = ImageTk.PhotoImage(self.mimg)
+        self.modify_description = tkinter.Label(image = self.mimg, borderwidth = 0).place(x = 219, y = 200)
 
         self.loggedin = tkinter.Label(text = f"Logged in as {self.username}", background = WINDOWBG2).pack(side = BOTTOM, anchor = SE)
 
@@ -725,12 +730,12 @@ class Home:
             self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
             self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
             self.user.place(x = 262, y = 100)
-            self.passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*", background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+            self.passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*", background = "#B2FFFF", bd = 3)
             self.passwordwidget.place(x = 310, y  = 200)
             self.state_check = tkinter.IntVar()
             self.show_password = tkinter.Checkbutton(variable = self.state_check, text = "Show Password :", command = self.DisplayPassword, background = "#B2FFFF")
             self.show_password.place(x = 310, y = 230)
-            self.confirm_passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*", background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+            self.confirm_passwordwidget = tkinter.Entry(width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*", background = "#B2FFFF", bd = 4)
             self.confirm_passwordwidget.place(x = 310, y  = 300)           
             self.next3 = tkinter.Button(image = self.next_img, borderwidth = 0, command = self.CreatingAccount, background = "#B2FFFF")
             self.next3.place(x = 590, y = 275)
@@ -756,7 +761,7 @@ class Home:
             self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
             self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
             self.user.place(x = 262, y = 100)
-            self.verificationwidget = tkinter.Text(height = 1, width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+            self.verificationwidget = tkinter.Text(height = 1, width = 25, font = ("Consolas",14,"bold"), borderwidth = 0, background = "#B2FFFF", bd = 4)
             self.verificationwidget.place(x = 310, y  = 270)
             self.next2 = tkinter.Button(image = self.next_img, borderwidth = 0, command = self.Password_Confirmation, background = "#B2FFFF")
             self.next2.place(x = 590, y = 235)
@@ -780,7 +785,7 @@ class Home:
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 262, y = 100)
-        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, background = "#B2FFFF", bd = 4)
         self.usernamewidget.place(x = 310, y  = 200)
         self.next1 = tkinter.Button(image = self.next_img, borderwidth = 0, command = self.Submit_NewUser, background = "#B2FFFF")
         self.next1.place(x = 590, y = 235)
@@ -797,9 +802,9 @@ class Home:
         self.userdetails_img = ImageTk.PhotoImage(self.userdetails_img)
         self.user = tkinter.Label(image = self.userdetails_img, borderwidth = 0)
         self.user.place(x = 60, y = 100)
-        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+        self.usernamewidget = tkinter.Text(height = 1, width = 30, font = ("Consolas",14,"bold"), borderwidth = 0,bd = 4, background = "#B2FFFF")
         self.usernamewidget.place(x = 110, y  = 200)
-        self.passwordwidget = tkinter.Entry(width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*",background = "#B2FFFF", highlightcolor = "black", highlightthickness = 1, highlightbackground = "black")
+        self.passwordwidget = tkinter.Entry(width = 30, font = ("Consolas",14,"bold"), borderwidth = 0, show = "*",background = "#B2FFFF",bd = 4)
         self.passwordwidget.place(x = 110, y  = 295)
         self.state_check = tkinter.IntVar()
         self.show_password = tkinter.Checkbutton(variable = self.state_check, text = "Show Password :", command = self.DisplayPassword,background = "#B2FFFF")
@@ -832,6 +837,5 @@ login_button.place(x = 462, y = 100)
 home_img = Image.open("Images/Home.png")
 home_img = ImageTk.PhotoImage(home_img)
 on_home.homebutton = tkinter.Button(image = home_img, command = on_home.HomePage)
-
 
 window.mainloop()
