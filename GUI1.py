@@ -125,7 +125,7 @@ def Form_Sorting():
 
         def browse_file(self):
             self.Fields_available.destroy()
-            setattr(fields,'name',filedialog.askopenfilename(filetypes = (("All files", "*"), ("Excel Files", "*.xlsx"))))
+            setattr(fields,'name',filedialog.askopenfilename(filetypes = (("Excel Files", "*.xlsx"),("All files", "*"))))
             wb = openpyxl.load_workbook(fields.name)
             if file_name.get(1.0,END) != "":
                 file_name.delete(1.0,END)
@@ -363,7 +363,7 @@ def Send_Mails():
     def Browse_File():
         if file_name.get(1.0,END) != "":
             file_name.delete(1.0,END)
-        setattr(mails, "file_path", filedialog.askopenfilename(filetypes = (("All files", "*"), ("Template files", "*.type"))))
+        setattr(mails, "file_path", filedialog.askopenfilename(filetypes = ( ("Excel files", "*.xlsx"), ("All files", "*"))))
         file_name.insert(END, f"{mails.file_path}")
         workbook = openpyxl.load_workbook(mails.file_path)
         sheet = workbook.active
