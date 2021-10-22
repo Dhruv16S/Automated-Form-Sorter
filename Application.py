@@ -12,6 +12,8 @@ import string
 from email.message import EmailMessage
 from email.mime.text import MIMEText
 import os
+#insert your Chrome Driver path here
+insert_your_path = "C:/Chrome Driver/chromedriver"
 WINDOWBG1 = "#ffd9e2"
 WINDOWBG2 = "#ceffff"
 WINDOWBG3 = "#fff0c2"
@@ -114,7 +116,7 @@ def Form_Sorting():
             self.custom_choice = tkinter.Text(width = 10, height = 1,font = ("Consolas",14,"bold"), borderwidth = 0)          
 
         def Open_Drive(self):
-            chrome_driver_path = "C:/Chrome Driver/chromedriver"
+            chrome_driver_path = insert_your_path
             driver = webdriver.Chrome(executable_path = chrome_driver_path)
             driver.get("https://accounts.google.com/signin/v2/identifier?service=writely&sacu=1&rip=1&flowName=GlifWebSignIn&flowEntry=ServiceLogin")
             login = driver.find_element_by_id("identifierId")
@@ -575,8 +577,7 @@ def Modify_Excel():
             self.refbutton.place(x = 200, y = 290)
 
         def Open_Drive(self):
-            #insert your Chrome Driver path here
-            chrome_driver_path = "C:/Chrome Driver/chromedriver"
+            chrome_driver_path = insert_your_path
             driver = webdriver.Chrome(executable_path = chrome_driver_path)
             driver.get("https://accounts.google.com/signin/v2/identifier?service=writely&sacu=1&rip=1&flowName=GlifWebSignIn&flowEntry=ServiceLogin")
             login = driver.find_element_by_id("identifierId")
